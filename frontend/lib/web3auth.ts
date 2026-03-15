@@ -4,12 +4,12 @@ import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 
 const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.EIP155,
-  chainId: "0x152", // Cronos Testnet (338 in decimal)
-  rpcTarget: "https://evm-t3.cronos.org",
-  displayName: "Cronos Testnet",
-  blockExplorer: "https://testnet.cronoscan.com",
-  ticker: "TCRO",
-  tickerName: "Cronos Test Token",
+  chainId: "0x1", // Placeholder — Stellar integration uses Freighter wallet
+  rpcTarget: "https://horizon-testnet.stellar.org",
+  displayName: "Stellar Testnet",
+  blockExplorer: "https://stellar.expert/explorer/testnet",
+  ticker: "XLM",
+  tickerName: "Stellar Lumens",
 };
 
 const privateKeyProvider = new EthereumPrivateKeyProvider({
@@ -35,7 +35,7 @@ export const web3auth = clientId
       uiConfig: {
         appName: "AgenticPay",
         theme: {
-          primary: "#0052FF", // Cronos blue
+          primary: "#0052FF",
         },
         mode: "light",
         loginMethodsOrder: ["google", "twitter", "email_passwordless"],

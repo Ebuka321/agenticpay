@@ -1,18 +1,16 @@
 import { createConfig, http } from 'wagmi';
-import { cronos, cronosTestnet } from 'wagmi/chains';
-import { injected, walletConnect } from 'wagmi/connectors';
+import { mainnet } from 'wagmi/chains';
+import { injected } from 'wagmi/connectors';
 
+// NOTE: Primary wallet integration will use Stellar/Freighter.
+// wagmi config is kept as a minimal placeholder for Web3Auth compatibility.
 export const wagmiConfig = createConfig({
-  chains: [cronosTestnet, cronos],
+  chains: [mainnet],
   connectors: [
-    injected(), // MetaMask, Coinbase, etc.
-    walletConnect({
-      projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
-    }),
+    injected(),
   ],
   transports: {
-    [cronosTestnet.id]: http(),
-    [cronos.id]: http(),
+    [mainnet.id]: http(),
   },
 });
 
