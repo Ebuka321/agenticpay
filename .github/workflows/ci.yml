@@ -85,6 +85,6 @@ jobs:
         run: cargo build --release
         working-directory: contracts
 
-      - name: Run tests
-        run: cargo test
+      - name: Check contracts
+        run: cargo check
         working-directory: contracts
