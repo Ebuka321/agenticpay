@@ -100,7 +100,18 @@ class ClaimableBalanceService {
     status: string;
     claim_instructions: string;
   }> {
-    const response = await this.client.post<{ success: boolean; data: any }>('/', params);
+    const response = await this.client.post<{
+      success: boolean;
+      data: {
+        id: number;
+        balance_id: string;
+        amount: string;
+        asset_code: string;
+        claimant_public_key: string;
+        status: string;
+        claim_instructions: string;
+      };
+    }>('/', params);
     return response.data.data;
   }
 
