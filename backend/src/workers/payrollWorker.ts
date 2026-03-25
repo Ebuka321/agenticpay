@@ -3,6 +3,7 @@ import { redisConnection, PAYROLL_QUEUE_NAME } from '../config/queue.js';
 import { PayrollBonusService } from '../services/payrollBonusService.js';
 import { PayrollJobData } from '../services/payrollQueueService.js';
 import { StellarService } from '../services/stellarService.js';
+import { PayrollAuditService } from '../services/payrollAuditService.js';
 import { emitBulkUpdate } from '../services/socketService.js';
 import logger from '../utils/logger.js';
 import { Keypair, Asset, Operation, TransactionBuilder } from '@stellar/stellar-sdk';
@@ -92,9 +93,23 @@ export const payrollWorker = new Worker<PayrollJobData>(
                     const result = await StellarService.submitTransaction(tx);
                     logger.info(`Chunk ${i + 1} submitted successfully. Tx Hash: ${result.hash}`);
 
-                    // Update database for items in this chunk
+                    // Update database for items in this chunk and log audit entries
                     for (const item of chunk) {
                         await PayrollBonusService.updateItemStatus(item.id, 'completed', result.hash);
+                        
+                        // Log successful transaction with item type
+                        await PayrollAuditService.logTransactionSucceeded(
+                            payroll_run.organization_id,
+                            payrollRunId,
+                            item.id,
+                            item.employee_id,
+                            result.hash,
+                            result.ledger || 0,
+                            item.amount,
+                            assetCode,
+                            item.item_type
+                        );
+                        
                         completedCount++;
                     }
 
@@ -110,9 +125,22 @@ export const payrollWorker = new Worker<PayrollJobData>(
                 } catch (chunkError: any) {
                     logger.error(`Failed to process chunk ${i + 1} for run ${payrollRunId}`, chunkError);
 
-                    // Mark items in this chunk as failed
+                    // Mark items in this chunk as failed and log audit entries
                     for (const item of chunk) {
                         await PayrollBonusService.updateItemStatus(item.id, 'failed');
+                        
+                        // Log failed transaction with item type
+                        await PayrollAuditService.logTransactionFailed(
+                            payroll_run.organization_id,
+                            payrollRunId,
+                            item.id,
+                            item.employee_id,
+                            'N/A',
+                            chunkError.message || 'Unknown error',
+                            item.amount,
+                            assetCode,
+                            item.item_type
+                        );
                     }
 
                     // We continue with other chunks instead of failing the whole job immediately,
