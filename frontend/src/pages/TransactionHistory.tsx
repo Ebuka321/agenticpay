@@ -6,7 +6,6 @@ import { useFilterState } from '../hooks/useFilterState';
 import { useTransactionHistory } from '../hooks/useTransactionHistory';
 import { useSocket } from '../hooks/useSocket';
 import { ConnectionStatus } from '../components/ConnectionStatus';
-import type { TimelineItem } from '../types/transactionHistory';
 
 const POLLING_INTERVAL_MS = 15_000;
 
@@ -56,11 +55,7 @@ export default function TransactionHistory() {
   useEffect(() => {
     if (!socket) return;
 
-    const onTransactionUpdate = (payload: {
-      transactionId: string;
-      status: string;
-      timestamp: string;
-    }) => {
+    const onTransactionUpdate = () => {
       // Refetch to get the latest data when a transaction updates
       void refetch();
     };
