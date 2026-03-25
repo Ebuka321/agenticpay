@@ -15,8 +15,42 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Bell, LogOut, User, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useDisconnect } from 'wagmi';
+// 1. I added useNetwork to the existing wagmi import
+import { useDisconnect, useAccount } from 'wagmi';
 import { web3auth } from '@/lib/web3auth';
+
+// 2. I built the isolated NetworkIndicator component right here
+const NetworkIndicator = () => {
+  // We use useAccount() in Wagmi v2 instead of useNetwork()
+  const { chain, isConnected } = useAccount();
+
+  // Hide it if the wallet isn't connected yet
+  if (!isConnected) return null;
+
+  // In v2, if connected but 'chain' is undefined, it means they are on an unsupported network
+  if (!chain) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-medium border border-red-200">
+        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        Wrong Network
+      </div>
+    );
+  }
+
+  // Handle Mainnet (Green) vs Testnet (Yellow) states
+  const isTestnet = chain.testnet === true;
+  const bgColor = isTestnet 
+    ? 'bg-yellow-100 text-yellow-800 border-yellow-200' 
+    : 'bg-green-100 text-green-800 border-green-200';
+  const dotColor = isTestnet ? 'bg-yellow-500' : 'bg-green-500';
+
+  return (
+    <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${bgColor}`}>
+      <span className={`w-2 h-2 rounded-full ${dotColor}`}></span>
+      {chain.name}
+    </div>
+  );
+};
 
 export function Header() {
   const { name, email, address, logout } = useAuthStore();
@@ -52,6 +86,10 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-4">
+          
+          {/* 3. I dropped the new component right here! */}
+          <NetworkIndicator />
+
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
@@ -102,4 +140,3 @@ export function Header() {
     </header>
   );
 }
-
