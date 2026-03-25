@@ -8,6 +8,7 @@ import config from './config/index.js';
 import logger from './utils/logger.js';
 import passport from './config/passport.js';
 import { apiVersionMiddleware } from './middlewares/apiVersionMiddleware.js';
+import { apiRateLimit, authRateLimit, dataRateLimit } from './middlewares/rateLimitMiddleware.js';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swaggerConfig.js';
 import fs from 'fs';
@@ -61,18 +62,18 @@ fs.writeFileSync(
 app.use(apiVersionMiddleware);
 
 // Feature / PR specific routes
-app.use('/auth', authRoutes);
-app.use('/api/v1', v1Routes);
-app.use('/webhooks', webhookRoutes);
+app.use('/auth', authRateLimit(), authRoutes);
+app.use('/api/v1', apiRateLimit(), v1Routes);
+app.use('/webhooks', apiRateLimit(), webhookRoutes);
 
 // Upstream / Base routes
-app.use('/api/auth', authRoutes);
-app.use('/api/payroll', payrollRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/assets', assetRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api', contractRoutes);
+app.use('/api/auth', authRateLimit(), authRoutes);
+app.use('/api/payroll', apiRateLimit(), payrollRoutes);
+app.use('/api/employees', dataRateLimit(), employeeRoutes);
+app.use('/api/assets', dataRateLimit(), assetRoutes);
+app.use('/api/payments', apiRateLimit(), paymentRoutes);
+app.use('/api/search', dataRateLimit(), searchRoutes);
+app.use('/api', apiRateLimit(), contractRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
