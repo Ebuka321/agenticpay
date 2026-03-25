@@ -15,11 +15,13 @@ import {
 } from 'lucide-react';
 import { Avatar } from './Avatar';
 import { AvatarUpload } from './AvatarUpload';
+import { useWallet } from '../hooks/useWallet';
 
 const AppNav: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [userImageUrl, setUserImageUrl] = useState<string | undefined>(undefined);
+  const { address, walletName, isConnecting } = useWallet();
 
   useEffect(() => {
     const savedImage = localStorage.getItem('payd:user-avatar');
@@ -212,6 +214,18 @@ const AppNav: React.FC = () => {
 
         {/* User profile */}
         <div className="ml-auto flex items-center gap-2">
+          <div className="hidden xl:flex flex-col items-end rounded-lg border border-(--border-hi) bg-(--surface) px-3 py-1.5">
+            <span className="text-[9px] uppercase tracking-wider text-(--muted)">
+              {isConnecting
+                ? 'Connecting wallet'
+                : walletName
+                  ? `${walletName} connected`
+                  : 'Wallet'}
+            </span>
+            <span className="text-[11px] font-mono text-(--accent)">
+              {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'}
+            </span>
+          </div>
           <button
             type="button"
             className="p-1 rounded-lg flex items-center gap-2 cursor-pointer border border-(--border-hi) bg-(--surface) hover:bg-(--surface-hi) transition"
