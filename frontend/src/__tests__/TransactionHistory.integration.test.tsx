@@ -169,7 +169,8 @@ describe('TransactionHistory Integration', () => {
       expect(getByText('No transactions found')).toBeInTheDocument();
     });
 
-    expect(getByText(/Try adjusting your filters/)).toBeInTheDocument();
+    // When no filters are active, should show default message
+    expect(getByText(/No transaction history available yet/)).toBeInTheDocument();
   });
 
   test('displays error state and retry button on API failure', async () => {
@@ -263,7 +264,7 @@ describe('TransactionHistory Integration', () => {
           status: 'confirmed',
         }),
       }),
-      undefined
+      expect.any(Object) // AbortSignal is passed as second parameter
     );
   });
 
@@ -280,8 +281,10 @@ describe('TransactionHistory Integration', () => {
       <TransactionHistory />
     );
 
-    // Initially no filters active
-    expect(getByRole('button', { name: /Filters$/i })).toBeInTheDocument();
+    // Initially no filters active - button should just say "Filters" without count
+    const filtersButton = getByRole('button', { name: /Filters/i });
+    expect(filtersButton).toBeInTheDocument();
+    expect(filtersButton.textContent).toMatch(/^Filters\s*$/);
 
     // Open filters
     const filtersButton = getByRole('button', { name: /Filters/i });
