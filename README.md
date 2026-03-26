@@ -168,6 +168,10 @@ Start PayD locally in three steps:
 
 Need the full setup? Keep reading for prerequisites, environment variables, and database setup.
 
+For cloud hosting instructions, see the deployment guide:
+
+- [Vercel + Render Deployment Guide](docs/DEPLOYMENT_GUIDE_VERCEL_RENDER.md)
+
 ## Getting Started
 
 ### Prerequisites
