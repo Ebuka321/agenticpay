@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   PORT: z.string().default('3000'),
-  DATABASE_URL: z.string(),
+  DATABASE_URL: z.string().default('postgres://localhost:5432/payd_test'),
   REDIS_URL: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
