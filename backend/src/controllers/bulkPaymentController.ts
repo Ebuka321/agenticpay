@@ -5,7 +5,9 @@ import { BulkPaymentService, MAX_OPS_PER_ENVELOPE } from '../services/bulkPaymen
 
 const paymentItemSchema = z.object({
   destination: z.string().length(56, 'Stellar public key must be 56 characters'),
-  amount: z.string().regex(/^\d+(\.\d{1,7})?$/, 'Amount must be a positive decimal with up to 7 decimal places'),
+  amount: z
+    .string()
+    .regex(/^\d+(\.\d{1,7})?$/, 'Amount must be a positive decimal with up to 7 decimal places'),
   referenceId: z.string().max(255).optional(),
 });
 
@@ -39,7 +41,9 @@ export class BulkPaymentController {
       try {
         sourceKeypair = Keypair.fromSecret(sourceSecret);
       } catch {
-        return res.status(400).json({ error: 'Invalid sourceSecret: not a valid Stellar secret key.' });
+        return res
+          .status(400)
+          .json({ error: 'Invalid sourceSecret: not a valid Stellar secret key.' });
       }
 
       if (assetCode !== 'XLM' && !assetIssuer) {

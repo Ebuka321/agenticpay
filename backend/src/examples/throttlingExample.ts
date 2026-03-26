@@ -1,6 +1,6 @@
 /**
  * Example: Using Transaction Throttling
- * 
+ *
  * This file demonstrates various ways to use the transaction throttling mechanism
  * in different scenarios.
  */

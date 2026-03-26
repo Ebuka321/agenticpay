@@ -89,8 +89,12 @@ export class BalanceController {
    */
   static async preflightPayroll(req: Request, res: Response) {
     try {
-      const { distributionAccount, assetCode, assetIssuer: explicitIssuer, payments } =
-        preflightSchema.parse(req.body);
+      const {
+        distributionAccount,
+        assetCode,
+        assetIssuer: explicitIssuer,
+        payments,
+      } = preflightSchema.parse(req.body);
 
       // Resolve issuer: explicit value > asset registry.
       let resolvedIssuer: string | null = null;

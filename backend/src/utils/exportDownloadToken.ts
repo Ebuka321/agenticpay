@@ -28,7 +28,9 @@ export function verifyExportDownloadToken(token: string): ExportTokenPayload | n
     const payloadB64 = token.slice(0, dot);
     const sig = token.slice(dot + 1);
     if (signSegment(payloadB64) !== sig) return null;
-    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8')) as ExportTokenPayload;
+    const payload = JSON.parse(
+      Buffer.from(payloadB64, 'base64url').toString('utf8')
+    ) as ExportTokenPayload;
     if (!payload || typeof payload.exp !== 'number') return null;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
     if (payload.kind === 'receipt' && typeof payload.txHash === 'string') return payload;

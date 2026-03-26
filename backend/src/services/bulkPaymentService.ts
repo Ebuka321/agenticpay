@@ -1,10 +1,4 @@
-import {
-  Keypair,
-  Asset,
-  Operation,
-  TransactionBuilder,
-  Account,
-} from '@stellar/stellar-sdk';
+import { Keypair, Asset, Operation, TransactionBuilder, Account } from '@stellar/stellar-sdk';
 import { StellarService } from './stellarService.js';
 import { pool } from '../config/database.js';
 import logger from '../utils/logger.js';
@@ -61,9 +55,7 @@ export class BulkPaymentService {
 
     const assetCode = options.assetCode ?? 'XLM';
     const asset =
-      assetCode === 'XLM'
-        ? Asset.native()
-        : new Asset(assetCode, options.assetIssuer ?? '');
+      assetCode === 'XLM' ? Asset.native() : new Asset(assetCode, options.assetIssuer ?? '');
 
     const server = StellarService.getServer();
     const networkPassphrase = StellarService.getNetworkPassphrase();
@@ -97,7 +89,10 @@ export class BulkPaymentService {
       try {
         // Build the envelope using the manually managed sequence number.
         currentSequence += BigInt(1);
-        const account = new Account(sourceKeypair.publicKey(), (currentSequence - BigInt(1)).toString());
+        const account = new Account(
+          sourceKeypair.publicKey(),
+          (currentSequence - BigInt(1)).toString()
+        );
 
         const fee = (FEE_MULTIPLIER_PER_OP * chunk.length).toString();
         const builder = new TransactionBuilder(account, { fee, networkPassphrase });
@@ -123,7 +118,9 @@ export class BulkPaymentService {
         successfulItems += chunk.length;
 
         await this.updateEnvelopeItems(batchId, i, 'completed', result.hash);
-        logger.info(`Bulk payment envelope ${i + 1}/${envelopes.length} submitted. Hash: ${result.hash}`);
+        logger.info(
+          `Bulk payment envelope ${i + 1}/${envelopes.length} submitted. Hash: ${result.hash}`
+        );
       } catch (err: any) {
         logger.error(`Bulk payment envelope ${i + 1}/${envelopes.length} failed: ${err.message}`);
 
@@ -153,11 +150,7 @@ export class BulkPaymentService {
     }
 
     const finalStatus =
-      failedItems === 0
-        ? 'completed'
-        : successfulItems === 0
-          ? 'failed'
-          : 'partial';
+      failedItems === 0 ? 'completed' : successfulItems === 0 ? 'failed' : 'partial';
 
     await this.finalizeBatch(batchId, successfulItems, failedItems, finalStatus);
 
@@ -283,10 +276,9 @@ export class BulkPaymentService {
     batch: Record<string, unknown>;
     items: Record<string, unknown>[];
   } | null> {
-    const batchResult = await pool.query(
-      'SELECT * FROM bulk_payment_batches WHERE batch_id = $1',
-      [batchId]
-    );
+    const batchResult = await pool.query('SELECT * FROM bulk_payment_batches WHERE batch_id = $1', [
+      batchId,
+    ]);
     if (batchResult.rows.length === 0) return null;
 
     const itemsResult = await pool.query(

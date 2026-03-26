@@ -49,7 +49,9 @@ export function validateContractEntry(entry: Partial<ContractEntry>): Validation
   if (!entry.contractId) {
     errors.push('Missing required field: contractId');
   } else if (!validateContractId(entry.contractId)) {
-    errors.push(`Invalid contractId format: ${entry.contractId}. Must be C followed by 56 alphanumeric characters`);
+    errors.push(
+      `Invalid contractId format: ${entry.contractId}. Must be C followed by 56 alphanumeric characters`
+    );
   }
 
   if (!entry.network) {
@@ -74,6 +76,6 @@ export function validateContractEntry(entry: Partial<ContractEntry>): Validation
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }

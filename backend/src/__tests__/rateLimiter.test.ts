@@ -29,10 +29,10 @@ describe('Rate Limiting Integration', () => {
 
   it('should include rate limit headers for API routes', async () => {
     const response = await request(app).get('/health');
-    
+
     // Use health which is not rate limited but we can check an API route
     const apiResponse = await request(app).get('/api/v1/rate-limit/tiers');
-    
+
     expect(apiResponse.headers).toHaveProperty('x-ratelimit-limit');
     expect(apiResponse.headers).toHaveProperty('x-ratelimit-remaining');
     expect(apiResponse.headers).toHaveProperty('x-ratelimit-reset');
@@ -47,12 +47,12 @@ describe('Rate Limiting Integration', () => {
   it('should use different tiers for different routes', async () => {
     const authResponse = await request(app).post('/auth/login');
     const apiResponse = await request(app).get('/api/v1/rate-limit/tiers');
-    
+
     expect(authResponse.headers['x-ratelimit-limit']).not.toBeUndefined();
     expect(apiResponse.headers['x-ratelimit-limit']).not.toBeUndefined();
-    
+
     // Auth limit is 10, API limit is 100
-    expect(authResponse.headers['x-ratelimit-limit']).toBe("10");
-    expect(apiResponse.headers['x-ratelimit-limit']).toBe("100");
+    expect(authResponse.headers['x-ratelimit-limit']).toBe('10');
+    expect(apiResponse.headers['x-ratelimit-limit']).toBe('100');
   });
 });

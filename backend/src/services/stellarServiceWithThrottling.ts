@@ -1,6 +1,9 @@
 import { Transaction } from '@stellar/stellar-sdk';
 import { StellarService, TransactionResult } from './stellarService.js';
-import { StellarThrottlingService, ThrottledTransactionOptions } from './stellarThrottlingService.js';
+import {
+  StellarThrottlingService,
+  ThrottledTransactionOptions,
+} from './stellarThrottlingService.js';
 import logger from '../utils/logger.js';
 
 /**

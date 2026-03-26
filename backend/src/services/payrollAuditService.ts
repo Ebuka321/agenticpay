@@ -168,7 +168,12 @@ export class PayrollAuditService {
     amount: string,
     assetCode: string,
     actor: { type: ActorType; id?: string; email?: string },
-    context?: { ipAddress?: string; userAgent?: string; itemType?: 'base' | 'bonus'; description?: string }
+    context?: {
+      ipAddress?: string;
+      userAgent?: string;
+      itemType?: 'base' | 'bonus';
+      description?: string;
+    }
   ): Promise<PayrollAuditLog> {
     return this.log({
       organizationId,

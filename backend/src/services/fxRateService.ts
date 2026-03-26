@@ -29,10 +29,7 @@ function normalizeRates(rates: Record<string, number>): Record<string, number> {
   return out;
 }
 
-function buildPayload(
-  rates: Record<string, number>,
-  provider: string
-): OrgUsdRatesPayload {
+function buildPayload(rates: Record<string, number>, provider: string): OrgUsdRatesPayload {
   return {
     base: 'ORGUSD',
     quoteBase: 'USD',

@@ -15,31 +15,31 @@ All endpoints require JWT authentication (`Authorization: Bearer <token>`). Orga
 
 **Optional profile fields:**
 
-| Field | Type | Max Length | Notes |
-|-------|------|-----------|-------|
-| phone | string | 20 | Full-text searchable |
-| address_line1 | string | 255 | |
-| address_line2 | string | 255 | |
-| city | string | 100 | |
-| state_province | string | 100 | |
-| postal_code | string | 20 | |
-| country | string | 100 | |
-| job_title | string | 100 | Indexed, full-text searchable |
-| hire_date | string | - | YYYY-MM-DD format |
-| date_of_birth | string | - | YYYY-MM-DD format |
-| emergency_contact_name | string | 200 | |
-| emergency_contact_phone | string | 20 | |
-| withdrawal_preference | enum | - | `bank`, `mobile_money`, or `crypto` (default: `bank`) |
-| bank_name | string | 100 | |
-| bank_account_number | string | 50 | |
-| bank_routing_number | string | 50 | |
-| mobile_money_provider | string | 50 | |
-| mobile_money_account | string | 50 | |
-| wallet_address | string | 56 | Stellar public key |
-| status | enum | - | `active`, `inactive`, `pending` (default: `active`) |
-| base_salary | number | - | Non-negative (default: 0) |
-| base_currency | string | 12 | Default: `USDC` |
-| notes | text | - | Free-form notes |
+| Field                   | Type   | Max Length | Notes                                                 |
+| ----------------------- | ------ | ---------- | ----------------------------------------------------- |
+| phone                   | string | 20         | Full-text searchable                                  |
+| address_line1           | string | 255        |                                                       |
+| address_line2           | string | 255        |                                                       |
+| city                    | string | 100        |                                                       |
+| state_province          | string | 100        |                                                       |
+| postal_code             | string | 20         |                                                       |
+| country                 | string | 100        |                                                       |
+| job_title               | string | 100        | Indexed, full-text searchable                         |
+| hire_date               | string | -          | YYYY-MM-DD format                                     |
+| date_of_birth           | string | -          | YYYY-MM-DD format                                     |
+| emergency_contact_name  | string | 200        |                                                       |
+| emergency_contact_phone | string | 20         |                                                       |
+| withdrawal_preference   | enum   | -          | `bank`, `mobile_money`, or `crypto` (default: `bank`) |
+| bank_name               | string | 100        |                                                       |
+| bank_account_number     | string | 50         |                                                       |
+| bank_routing_number     | string | 50         |                                                       |
+| mobile_money_provider   | string | 50         |                                                       |
+| mobile_money_account    | string | 50         |                                                       |
+| wallet_address          | string | 56         | Stellar public key                                    |
+| status                  | enum   | -          | `active`, `inactive`, `pending` (default: `active`)   |
+| base_salary             | number | -          | Non-negative (default: 0)                             |
+| base_currency           | string | 12         | Default: `USDC`                                       |
+| notes                   | text   | -          | Free-form notes                                       |
 
 **Example:**
 
@@ -72,13 +72,13 @@ curl -X POST http://localhost:4000/api/employees \
 
 **Query parameters:**
 
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| page | number | 1 | Page number |
-| limit | number | 10 | Items per page |
-| search | string | - | Search across name, email, position, job_title, phone |
-| status | enum | - | Filter by status |
-| department | string | - | Filter by department |
+| Param      | Type   | Default | Description                                           |
+| ---------- | ------ | ------- | ----------------------------------------------------- |
+| page       | number | 1       | Page number                                           |
+| limit      | number | 10      | Items per page                                        |
+| search     | string | -       | Search across name, email, position, job_title, phone |
+| status     | enum   | -       | Filter by status                                      |
+| department | string | -       | Filter by department                                  |
 
 **Response:** `200 OK`
 
@@ -141,11 +141,11 @@ Sets `deleted_at` and marks status as `inactive`. Record remains in database.
 
 Three withdrawal methods for anchor integration:
 
-| Method | Fields Required |
-|--------|----------------|
-| `bank` | `bank_name`, `bank_account_number`, `bank_routing_number` |
-| `mobile_money` | `mobile_money_provider`, `mobile_money_account` |
-| `crypto` | `wallet_address` |
+| Method         | Fields Required                                           |
+| -------------- | --------------------------------------------------------- |
+| `bank`         | `bank_name`, `bank_account_number`, `bank_routing_number` |
+| `mobile_money` | `mobile_money_provider`, `mobile_money_account`           |
+| `crypto`       | `wallet_address`                                          |
 
 ## Validation Rules
 
@@ -157,12 +157,12 @@ Three withdrawal methods for anchor integration:
 
 ## Error Responses
 
-| Status | When |
-|--------|------|
-| `400` | Validation failure (includes `details` array with Zod issues) |
-| `403` | User not associated with an organization |
-| `404` | Employee not found in caller's organization |
-| `500` | Internal server error |
+| Status | When                                                          |
+| ------ | ------------------------------------------------------------- |
+| `400`  | Validation failure (includes `details` array with Zod issues) |
+| `403`  | User not associated with an organization                      |
+| `404`  | Employee not found in caller's organization                   |
+| `500`  | Internal server error                                         |
 
 ## Database Migration
 

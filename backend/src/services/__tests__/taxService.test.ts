@@ -75,7 +75,14 @@ describe('TaxService', () => {
       });
 
       expect(result).toEqual(mockRule);
-      expect(mockPool.query.mock.calls[0][1]).toEqual([1, 'Health Insurance', 'fixed', 150, null, 2]);
+      expect(mockPool.query.mock.calls[0][1]).toEqual([
+        1,
+        'Health Insurance',
+        'fixed',
+        150,
+        null,
+        2,
+      ]);
     });
   });
 

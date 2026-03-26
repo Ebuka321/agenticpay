@@ -21,6 +21,7 @@ Address.require_auth()  →  Host checks transaction signers against
 ```
 
 This means:
+
 - **Single-key accounts**: One valid signature is required.
 - **Multi-sig accounts**: The on-chain threshold (e.g., 2-of-3) must be met by the transaction's signer set.
 - **Contracts**: The invoking contract's authorization tree must satisfy the requirement.
@@ -29,61 +30,61 @@ This means:
 
 ### 3.1 `bulk_payment` Contract
 
-| Function | Auth Required | Who | Notes |
-|---|---|---|---|
-| `initialize` | None (first-call only) | Anyone | Guarded by `AlreadyInitialized` — can only run once |
-| `set_admin` | `admin.require_auth()` | Current admin | Transfers admin privilege |
-| `bump_ttl` | `admin.require_auth()` | Current admin | Extends storage TTLs |
-| `set_paused` | `admin.require_auth()` | Current admin | Circuit breaker toggle |
-| `is_paused` | None | Anyone | Read-only |
-| `set_default_limits` | `admin.require_auth()` | Current admin | Sets global spending limits |
-| `set_account_limits` | `admin.require_auth()` | Current admin | Per-account limit override |
-| `remove_account_limits` | `admin.require_auth()` | Current admin | Reverts to default limits |
-| `execute_batch` | `sender.require_auth()` | Batch sender | Also checks `require_not_paused` |
-| `execute_batch_partial` | `sender.require_auth()` | Batch sender | Also checks `require_not_paused` |
-| `execute_batch_v2` | `sender.require_auth()` | Batch sender | Also checks `require_not_paused` |
-| `refund_failed_payment` | None | Anyone | Refund always goes to `BatchRecord.sender`; cannot redirect |
-| `get_sequence` | None | Anyone | Read-only |
-| `get_batch` | None | Anyone | Read-only |
-| `get_batch_count` | None | Anyone | Read-only |
-| `get_account_limits` | None | Anyone | Read-only |
-| `get_account_usage` | None | Anyone | Read-only |
-| `get_payment_entry` | None | Anyone | Read-only |
-| `name` / `version` / `author` | None | Anyone | SEP-0034 metadata, read-only |
+| Function                      | Auth Required           | Who           | Notes                                                       |
+| ----------------------------- | ----------------------- | ------------- | ----------------------------------------------------------- |
+| `initialize`                  | None (first-call only)  | Anyone        | Guarded by `AlreadyInitialized` — can only run once         |
+| `set_admin`                   | `admin.require_auth()`  | Current admin | Transfers admin privilege                                   |
+| `bump_ttl`                    | `admin.require_auth()`  | Current admin | Extends storage TTLs                                        |
+| `set_paused`                  | `admin.require_auth()`  | Current admin | Circuit breaker toggle                                      |
+| `is_paused`                   | None                    | Anyone        | Read-only                                                   |
+| `set_default_limits`          | `admin.require_auth()`  | Current admin | Sets global spending limits                                 |
+| `set_account_limits`          | `admin.require_auth()`  | Current admin | Per-account limit override                                  |
+| `remove_account_limits`       | `admin.require_auth()`  | Current admin | Reverts to default limits                                   |
+| `execute_batch`               | `sender.require_auth()` | Batch sender  | Also checks `require_not_paused`                            |
+| `execute_batch_partial`       | `sender.require_auth()` | Batch sender  | Also checks `require_not_paused`                            |
+| `execute_batch_v2`            | `sender.require_auth()` | Batch sender  | Also checks `require_not_paused`                            |
+| `refund_failed_payment`       | None                    | Anyone        | Refund always goes to `BatchRecord.sender`; cannot redirect |
+| `get_sequence`                | None                    | Anyone        | Read-only                                                   |
+| `get_batch`                   | None                    | Anyone        | Read-only                                                   |
+| `get_batch_count`             | None                    | Anyone        | Read-only                                                   |
+| `get_account_limits`          | None                    | Anyone        | Read-only                                                   |
+| `get_account_usage`           | None                    | Anyone        | Read-only                                                   |
+| `get_payment_entry`           | None                    | Anyone        | Read-only                                                   |
+| `name` / `version` / `author` | None                    | Anyone        | SEP-0034 metadata, read-only                                |
 
 ### 3.2 `revenue_split` Contract
 
-| Function | Auth Required | Who | Notes |
-|---|---|---|---|
-| `init` | None (first-call only) | Anyone | Guarded by persistent storage check |
-| `set_admin` | `admin.require_auth()` | Current admin | |
-| `update_recipients` | `admin.require_auth()` | Current admin | |
-| `bump_ttl` | `admin.require_auth()` | Current admin | |
-| `distribute` | `from.require_auth()` | Token sender | The sender authorizes their own funds transfer |
-| `name` / `version` / `author` | None | Anyone | SEP-0034 metadata |
+| Function                      | Auth Required          | Who           | Notes                                          |
+| ----------------------------- | ---------------------- | ------------- | ---------------------------------------------- |
+| `init`                        | None (first-call only) | Anyone        | Guarded by persistent storage check            |
+| `set_admin`                   | `admin.require_auth()` | Current admin |                                                |
+| `update_recipients`           | `admin.require_auth()` | Current admin |                                                |
+| `bump_ttl`                    | `admin.require_auth()` | Current admin |                                                |
+| `distribute`                  | `from.require_auth()`  | Token sender  | The sender authorizes their own funds transfer |
+| `name` / `version` / `author` | None                   | Anyone        | SEP-0034 metadata                              |
 
 ### 3.3 `vesting_escrow` Contract
 
-| Function | Auth Required | Who | Notes |
-|---|---|---|---|
-| `initialize` | `funder.require_auth()` | Funder | Also transfers tokens to contract |
-| `claim` | `beneficiary.require_auth()` | Beneficiary | Only the designated beneficiary can claim |
-| `clawback` | `clawback_admin.require_auth()` | Clawback admin | Returns unvested tokens |
-| `bump_ttl` | `clawback_admin.require_auth()` | Clawback admin | |
-| `get_*` functions | None | Anyone | Read-only |
-| `name` / `version` / `author` | None | Anyone | SEP-0034 metadata |
+| Function                      | Auth Required                   | Who            | Notes                                     |
+| ----------------------------- | ------------------------------- | -------------- | ----------------------------------------- |
+| `initialize`                  | `funder.require_auth()`         | Funder         | Also transfers tokens to contract         |
+| `claim`                       | `beneficiary.require_auth()`    | Beneficiary    | Only the designated beneficiary can claim |
+| `clawback`                    | `clawback_admin.require_auth()` | Clawback admin | Returns unvested tokens                   |
+| `bump_ttl`                    | `clawback_admin.require_auth()` | Clawback admin |                                           |
+| `get_*` functions             | None                            | Anyone         | Read-only                                 |
+| `name` / `version` / `author` | None                            | Anyone         | SEP-0034 metadata                         |
 
 ### 3.4 `cross_asset_payment` Contract
 
-| Function | Auth Required | Who | Notes |
-|---|---|---|---|
-| `init` | None (first-call only) | Anyone | Guarded by persistent storage check |
-| `bump_ttl` | `admin.require_auth()` | Admin | |
-| `initiate_payment` | `from.require_auth()` | Payment sender | Escrows tokens into contract |
-| `update_status` | `admin.require_auth()` | Admin | |
-| `get_payment` | None | Anyone | Read-only |
-| `get_payment_count` | None | Anyone | Read-only |
-| `name` / `version` / `author` | None | Anyone | SEP-0034 metadata |
+| Function                      | Auth Required          | Who            | Notes                               |
+| ----------------------------- | ---------------------- | -------------- | ----------------------------------- |
+| `init`                        | None (first-call only) | Anyone         | Guarded by persistent storage check |
+| `bump_ttl`                    | `admin.require_auth()` | Admin          |                                     |
+| `initiate_payment`            | `from.require_auth()`  | Payment sender | Escrows tokens into contract        |
+| `update_status`               | `admin.require_auth()` | Admin          |                                     |
+| `get_payment`                 | None                   | Anyone         | Read-only                           |
+| `get_payment_count`           | None                   | Anyone         | Read-only                           |
+| `name` / `version` / `author` | None                   | Anyone         | SEP-0034 metadata                   |
 
 ## 4. Security Proofs
 
@@ -92,6 +93,7 @@ This means:
 **Claim**: Only the current admin can modify `DataKey::Admin`.
 
 **Proof**: The `set_admin` function in all contracts follows this pattern:
+
 ```rust
 fn set_admin(env: Env, new_admin: Address) {
     let admin = env.storage().persistent().get(&DataKey::Admin).unwrap();
@@ -99,6 +101,7 @@ fn set_admin(env: Env, new_admin: Address) {
     env.storage().persistent().set(&DataKey::Admin, &new_admin);
 }
 ```
+
 - `require_auth()` panics if the invoker cannot prove control of the admin address.
 - There is no alternative code path that writes to `DataKey::Admin`.
 - `initialize` is the only other writer, but it is guarded by `AlreadyInitialized`.
@@ -132,6 +135,7 @@ fn set_admin(env: Env, new_admin: Address) {
 ### 5.1 Revoked Multi-Sig Signers
 
 If an admin is a multi-sig account and a signer is removed on-chain:
+
 - The `require_auth()` call checks the **current** on-chain signer configuration at transaction execution time.
 - A removed signer cannot contribute to meeting the threshold.
 - **Result**: The contract correctly rejects the operation if the threshold is no longer met.
@@ -139,6 +143,7 @@ If an admin is a multi-sig account and a signer is removed on-chain:
 ### 5.2 Expired Authorizations
 
 Soroban's auth framework uses `SorobanAuthorizedInvocation` entries in the transaction. These are validated at simulation time and again at submission time:
+
 - Authorization entries reference the specific contract call and its arguments.
 - Replay is prevented by Stellar's sequence number mechanism.
 - **Result**: No expired or replayed authorization can succeed.
@@ -146,6 +151,7 @@ Soroban's auth framework uses `SorobanAuthorizedInvocation` entries in the trans
 ### 5.3 Admin Key Rotation During Active Batches
 
 If the admin key is changed via `set_admin` while batches are in progress:
+
 - Existing batch records (`BatchRecord`, `PaymentEntry`) are unaffected — they reference the sender, not the admin.
 - The old admin immediately loses all administrative privileges.
 - The new admin immediately gains all administrative privileges.

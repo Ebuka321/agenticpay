@@ -96,9 +96,8 @@ export default function CustomReportBuilder() {
   const [organizationPublicKey, setOrganizationPublicKey] = useState('');
   const [startDate, setStartDate] = useState(getDefaultStartDate());
   const [endDate, setEndDate] = useState(getDefaultEndDate());
-  const [selectedColumns, setSelectedColumns] = useState<PayrollExportColumnId[]>(
-    DEFAULT_SELECTED_COLUMNS
-  );
+  const [selectedColumns, setSelectedColumns] =
+    useState<PayrollExportColumnId[]>(DEFAULT_SELECTED_COLUMNS);
   const [format, setFormat] = useState<PayrollExportFormat>('excel');
   const [isExporting, setIsExporting] = useState(false);
 
@@ -154,9 +153,7 @@ export default function CustomReportBuilder() {
 
   const handleColumnToggle = (columnId: PayrollExportColumnId) => {
     setSelectedColumns((current) =>
-      current.includes(columnId)
-        ? current.filter((id) => id !== columnId)
-        : [...current, columnId]
+      current.includes(columnId) ? current.filter((id) => id !== columnId) : [...current, columnId]
     );
   };
 
@@ -428,11 +425,7 @@ export default function CustomReportBuilder() {
                           >
                             {selectedColumnMeta.length > 0 ? (
                               selectedColumnMeta.map((column, index) => (
-                                <Draggable
-                                  key={column.id}
-                                  draggableId={column.id}
-                                  index={index}
-                                >
+                                <Draggable key={column.id} draggableId={column.id} index={index}>
                                   {(dragProvided, snapshot) => (
                                     <div
                                       ref={dragProvided.innerRef}
@@ -521,7 +514,9 @@ export default function CustomReportBuilder() {
               variant="primary"
               size="md"
               className="w-full justify-center"
-              disabled={isExporting || selectedColumns.length === 0 || !organizationPublicKey.trim()}
+              disabled={
+                isExporting || selectedColumns.length === 0 || !organizationPublicKey.trim()
+              }
             >
               <FileDown className="mr-2 h-4 w-4" />
               {isExporting ? 'Exporting...' : 'Export Report'}

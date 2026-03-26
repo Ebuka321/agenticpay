@@ -467,7 +467,9 @@ describe('StellarService', () => {
       );
       StellarService.signTransaction(transaction, testKeypair);
 
-      await expect(StellarService.submitTransaction(transaction)).rejects.toThrow('Transaction submission failed');
+      await expect(StellarService.submitTransaction(transaction)).rejects.toThrow(
+        'Transaction submission failed'
+      );
       await expect(StellarService.submitTransaction(transaction)).rejects.toThrow('Result XDR');
     });
 
