@@ -95,6 +95,14 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="space-y-6">
+      <PageBreadcrumb
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Projects', href: '/dashboard/projects' },
+        ]}
+        currentPage={project.title}
+      />
+
       <Link href="/dashboard/projects">
         <Button variant="ghost" className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />

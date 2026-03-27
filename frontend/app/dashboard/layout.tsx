@@ -22,6 +22,27 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, router]);
 
+  // Save scroll position when leaving a page
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+
+    const handleScroll = () => {
+      scrollPositions.current[pathname] = main.scrollTop;
+    };
+
+    main.addEventListener('scroll', handleScroll);
+    return () => main.removeEventListener('scroll', handleScroll);
+  }, [pathname]);
+
+  // Restore scroll position when arriving at a page
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const saved = scrollPositions.current[pathname];
+    main.scrollTop = saved ?? 0;
+  }, [pathname]);
+
   if (!isAuthenticated) {
     return null;
   }
@@ -40,4 +61,3 @@ export default function DashboardLayout({
     </div>
   );
 }
-
