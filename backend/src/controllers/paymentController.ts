@@ -30,11 +30,9 @@ export class PaymentController {
     const { domain, paymentData, secretKey, senderPublicKey } = req.body;
 
     if (!domain || !paymentData || !secretKey || !senderPublicKey) {
-      return res
-        .status(400)
-        .json({
-          error: 'Missing required fields: domain, paymentData, secretKey, senderPublicKey',
-        });
+      return res.status(400).json({
+        error: 'Missing required fields: domain, paymentData, secretKey, senderPublicKey',
+      });
     }
 
     try {

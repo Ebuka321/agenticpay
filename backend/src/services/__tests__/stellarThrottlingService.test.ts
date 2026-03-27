@@ -76,7 +76,9 @@ describe('StellarThrottlingService', () => {
 
       (StellarService.submitTransaction as jest.Mock).mockRejectedValue(mockError);
 
-      await expect(service.submitTransaction(mockTransaction)).rejects.toThrow('Transaction failed');
+      await expect(service.submitTransaction(mockTransaction)).rejects.toThrow(
+        'Transaction failed'
+      );
     });
 
     it('should submit with priority flag', async () => {

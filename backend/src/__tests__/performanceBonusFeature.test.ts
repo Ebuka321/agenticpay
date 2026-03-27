@@ -4,7 +4,7 @@ import { pool } from '../config/database';
 
 /**
  * Integration tests for Performance Bonus Feature
- * 
+ *
  * Acceptance Criteria:
  * 1. API supports adding one-time bonus items to a payroll run
  * 2. Audit logs and receipts distinguish between base and bonus
@@ -38,7 +38,10 @@ describe('Performance Bonus Feature', () => {
   afterAll(async () => {
     // Cleanup
     await pool.query('DELETE FROM payroll_audit_logs WHERE organization_id = $1', [testOrgId]);
-    await pool.query('DELETE FROM payroll_items WHERE payroll_run_id IN (SELECT id FROM payroll_runs WHERE organization_id = $1)', [testOrgId]);
+    await pool.query(
+      'DELETE FROM payroll_items WHERE payroll_run_id IN (SELECT id FROM payroll_runs WHERE organization_id = $1)',
+      [testOrgId]
+    );
     await pool.query('DELETE FROM payroll_runs WHERE organization_id = $1', [testOrgId]);
     await pool.query('DELETE FROM employees WHERE organization_id = $1', [testOrgId]);
     await pool.query('DELETE FROM organizations WHERE id = $1', [testOrgId]);
@@ -116,7 +119,7 @@ describe('Performance Bonus Feature', () => {
       expect(baseItems).toHaveLength(1);
       expect(bonusItems).toHaveLength(3); // 1 single + 2 batch
       expect(baseItems[0]?.item_type).toBe('base');
-      expect(bonusItems.every(item => item.item_type === 'bonus')).toBe(true);
+      expect(bonusItems.every((item) => item.item_type === 'bonus')).toBe(true);
     });
   });
 
@@ -169,7 +172,7 @@ describe('Performance Bonus Feature', () => {
         100
       );
 
-      const bonusLogs = logs.filter(log => log.metadata?.item_type === 'bonus');
+      const bonusLogs = logs.filter((log) => log.metadata?.item_type === 'bonus');
       expect(bonusLogs.length).toBeGreaterThan(0);
     });
   });
@@ -181,13 +184,13 @@ describe('Performance Bonus Feature', () => {
       expect(summary).toBeDefined();
       expect(summary?.summary.total_base_items).toBe(1);
       expect(summary?.summary.total_bonus_items).toBe(3);
-      
+
       // Base: 1000
       expect(parseFloat(summary?.summary.total_base_amount || '0')).toBe(1000);
-      
+
       // Bonus: 500 + 250 + 150 = 900
       expect(parseFloat(summary?.summary.total_bonus_amount || '0')).toBe(900);
-      
+
       // Total: 1000 + 900 = 1900
       expect(parseFloat(summary?.summary.total_amount || '0')).toBe(1900);
     });
@@ -209,10 +212,10 @@ describe('Performance Bonus Feature', () => {
         await PayrollBonusService.deletePayrollItem(itemToDelete.id);
 
         const updatedSummary = await PayrollBonusService.getPayrollRunSummary(testPayrollRunId);
-        
+
         // After deleting one 500 bonus: 900 - 500 = 400
         expect(parseFloat(updatedSummary?.summary.total_bonus_amount || '0')).toBe(400);
-        
+
         // Total: 1000 + 400 = 1400
         expect(parseFloat(updatedSummary?.summary.total_amount || '0')).toBe(1400);
       }
@@ -229,7 +232,7 @@ describe('Performance Bonus Feature', () => {
 
       expect(bonusHistory).toBeDefined();
       expect(total).toBeGreaterThan(0);
-      expect(bonusHistory.every(item => item.item_type === 'bonus')).toBe(true);
+      expect(bonusHistory.every((item) => item.item_type === 'bonus')).toBe(true);
     });
   });
 });

@@ -28,8 +28,7 @@ export interface SupportedAsset {
 
 /** Circle USDC – testnet: GBBD47…, mainnet: GA5ZSE… */
 const USDC_ISSUER =
-  process.env.USDC_ISSUER_PUBLIC ??
-  'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
+  process.env.USDC_ISSUER_PUBLIC ?? 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
 
 /**
  * Circle EURC – set EURC_ISSUER_PUBLIC for your network.
@@ -37,8 +36,7 @@ const USDC_ISSUER =
  * own or use a local test issuer.
  */
 const EURC_ISSUER =
-  process.env.EURC_ISSUER_PUBLIC ??
-  'GDHU6WRG4IEQXM5NZ4BMPKOXHW76MZM4Y2IEMFDVXBSDP6SJY4ITNPP';
+  process.env.EURC_ISSUER_PUBLIC ?? 'GDHU6WRG4IEQXM5NZ4BMPKOXHW76MZM4Y2IEMFDVXBSDP6SJY4ITNPP';
 
 /** Organization-specific custom stablecoin; must be set in .env */
 const ORGUSD_ISSUER = process.env.ORGUSD_ISSUER_PUBLIC ?? '';

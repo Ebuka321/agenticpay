@@ -47,8 +47,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
-    console.error('[migrate] ERROR: DATABASE_URL environment variable is not set.');
-    process.exit(1);
+  console.error('[migrate] ERROR: DATABASE_URL environment variable is not set.');
+  process.exit(1);
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -76,15 +76,15 @@ const BOOTSTRAP_SQL = `
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface AppliedMigration {
-    filename: string;
-    checksum: string;
+  filename: string;
+  checksum: string;
 }
 
 interface MigrationFile {
-    filename: string;
-    absolutePath: string;
-    sql: string;
-    checksum: string;
+  filename: string;
+  absolutePath: string;
+  sql: string;
+  checksum: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ interface MigrationFile {
  * Pure function with O(n) time and O(1) extra space (streaming hash).
  */
 function sha256(content: string): string {
-    return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
+  return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
 }
 
 /**
@@ -105,38 +105,36 @@ function sha256(content: string): string {
  * @throws {Error} if the directory cannot be read.
  */
 function readMigrationFiles(dir: string): MigrationFile[] {
-    if (!fs.existsSync(dir)) {
-        throw new Error(`Migrations directory not found: ${dir}`);
-    }
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Migrations directory not found: ${dir}`);
+  }
 
-    const files = fs
-        .readdirSync(dir)
-        .filter((f) => f.endsWith('.sql'))
-        .sort(); // lexicographic; '001_' < '012_' because '0' < '1'
+  const files = fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort(); // lexicographic; '001_' < '012_' because '0' < '1'
 
-    return files.map((filename) => {
-        const absolutePath = path.join(dir, filename);
-        const sql = fs.readFileSync(absolutePath, 'utf8');
-        const checksum = sha256(sql);
-        return { filename, absolutePath, sql, checksum };
-    });
+  return files.map((filename) => {
+    const absolutePath = path.join(dir, filename);
+    const sql = fs.readFileSync(absolutePath, 'utf8');
+    const checksum = sha256(sql);
+    return { filename, absolutePath, sql, checksum };
+  });
 }
 
 /**
  * Fetch the set of already-applied migrations from the tracking table.
  * Returns a Map<filename, AppliedMigration> for O(1) lookup per file.
  */
-async function fetchAppliedMigrations(
-    client: PoolClient,
-): Promise<Map<string, AppliedMigration>> {
-    const { rows } = await client.query<AppliedMigration>(
-        'SELECT filename, checksum FROM schema_migrations ORDER BY id',
-    );
-    const map = new Map<string, AppliedMigration>();
-    for (const row of rows) {
-        map.set(row.filename, row);
-    }
-    return map;
+async function fetchAppliedMigrations(client: PoolClient): Promise<Map<string, AppliedMigration>> {
+  const { rows } = await client.query<AppliedMigration>(
+    'SELECT filename, checksum FROM schema_migrations ORDER BY id'
+  );
+  const map = new Map<string, AppliedMigration>();
+  for (const row of rows) {
+    map.set(row.filename, row);
+  }
+  return map;
 }
 
 /**
@@ -144,165 +142,163 @@ async function fetchAppliedMigrations(
  * Executed inside the same transaction as the migration SQL itself.
  */
 async function recordMigration(
-    client: PoolClient,
-    filename: string,
-    checksum: string,
-    executionMs: number,
+  client: PoolClient,
+  filename: string,
+  checksum: string,
+  executionMs: number
 ): Promise<void> {
-    await client.query(
-        `INSERT INTO schema_migrations (filename, checksum, execution_ms)
+  await client.query(
+    `INSERT INTO schema_migrations (filename, checksum, execution_ms)
      VALUES ($1, $2, $3)
      ON CONFLICT (filename) DO NOTHING`,
-        [filename, checksum, executionMs],
-    );
+    [filename, checksum, executionMs]
+  );
 }
 
 // ─── Core runner ─────────────────────────────────────────────────────────────
 
 interface RunResult {
-    applied: string[];
-    skipped: string[];
-    driftDetected: string[];
+  applied: string[];
+  skipped: string[];
+  driftDetected: string[];
 }
 
 async function runMigrations(isDryRun: boolean): Promise<RunResult> {
-    const pool = new Pool({
-        connectionString: DATABASE_URL,
-        // Keep the pool minimal; the runner is a CLI tool, not a long-lived server.
-        max: 1,
-        idleTimeoutMillis: 5_000,
-        connectionTimeoutMillis: 10_000,
-    });
+  const pool = new Pool({
+    connectionString: DATABASE_URL,
+    // Keep the pool minimal; the runner is a CLI tool, not a long-lived server.
+    max: 1,
+    idleTimeoutMillis: 5_000,
+    connectionTimeoutMillis: 10_000,
+  });
 
-    const result: RunResult = { applied: [], skipped: [], driftDetected: [] };
+  const result: RunResult = { applied: [], skipped: [], driftDetected: [] };
 
-    const client = await pool.connect();
+  const client = await pool.connect();
 
-    try {
-        // ── Step 1: Bootstrap tracking table ──────────────────────────────────
-        // Always run inline, outside a migration transaction, so it is safe even
-        // on a completely blank database.
-        if (!isDryRun) {
-            await client.query(BOOTSTRAP_SQL);
-            console.log('[migrate] ✓ schema_migrations table ready');
-        } else {
-            console.log('[migrate] [dry-run] Would bootstrap schema_migrations table');
-        }
-
-        // ── Step 2: Read migration files ──────────────────────────────────────
-        const files = readMigrationFiles(MIGRATIONS_DIR);
-        console.log(`[migrate] Found ${files.length} migration file(s) in ${MIGRATIONS_DIR}`);
-
-        if (files.length === 0) {
-            console.log('[migrate] Nothing to do.');
-            return result;
-        }
-
-        // ── Step 3: Fetch already-applied set (O(m) time / space) ─────────────
-        const applied = isDryRun
-            ? new Map<string, AppliedMigration>()
-            : await fetchAppliedMigrations(client);
-
-        // ── Step 4: Evaluate each migration ───────────────────────────────────
-        for (const file of files) {
-            const record = applied.get(file.filename);
-
-            if (record !== undefined) {
-                // File already applied — check for content drift (tampering detection).
-                if (record.checksum !== file.checksum) {
-                    const msg =
-                        `[migrate] DRIFT DETECTED: "${file.filename}" was previously ` +
-                        `applied with checksum ${record.checksum} but the file now has ` +
-                        `checksum ${file.checksum}. ` +
-                        `Aborting to protect database integrity.`;
-                    console.error(msg);
-                    result.driftDetected.push(file.filename);
-                    // Accumulate all drifted files before throwing so the log is complete.
-                    continue;
-                }
-
-                console.log(`[migrate] ↷ Skipped  ${file.filename}  (already applied)`);
-                result.skipped.push(file.filename);
-                continue;
-            }
-
-            // ── Step 5: Apply pending migration in an atomic transaction ─────────
-            if (isDryRun) {
-                console.log(`[migrate] [dry-run] Would apply: ${file.filename}  (checksum: ${file.checksum})`);
-                result.applied.push(file.filename);
-                continue;
-            }
-
-            const startMs = Date.now();
-            await client.query('BEGIN');
-
-            try {
-                await client.query(file.sql);
-
-                const executionMs = Date.now() - startMs;
-
-                // Record INSIDE the same transaction so a runner crash after SQL
-                // execution but before the INSERT cannot leave an unrecorded migration.
-                await recordMigration(client, file.filename, file.checksum, executionMs);
-
-                await client.query('COMMIT');
-
-                console.log(
-                    `[migrate] ✓ Applied   ${file.filename}  (${executionMs} ms)`,
-                );
-                result.applied.push(file.filename);
-            } catch (err) {
-                await client.query('ROLLBACK');
-                console.error(`[migrate] ✗ Failed   ${file.filename}`);
-                throw err; // Surface to outer try/catch; unconditionally exit(1).
-            }
-        }
-
-        // ── Step 6: Abort if drift was detected at any point ──────────────────
-        if (result.driftDetected.length > 0) {
-            throw new Error(
-                `Content drift detected in ${result.driftDetected.length} migration(s): ` +
-                result.driftDetected.join(', '),
-            );
-        }
-    } finally {
-        client.release();
-        await pool.end();
+  try {
+    // ── Step 1: Bootstrap tracking table ──────────────────────────────────
+    // Always run inline, outside a migration transaction, so it is safe even
+    // on a completely blank database.
+    if (!isDryRun) {
+      await client.query(BOOTSTRAP_SQL);
+      console.log('[migrate] ✓ schema_migrations table ready');
+    } else {
+      console.log('[migrate] [dry-run] Would bootstrap schema_migrations table');
     }
 
-    return result;
+    // ── Step 2: Read migration files ──────────────────────────────────────
+    const files = readMigrationFiles(MIGRATIONS_DIR);
+    console.log(`[migrate] Found ${files.length} migration file(s) in ${MIGRATIONS_DIR}`);
+
+    if (files.length === 0) {
+      console.log('[migrate] Nothing to do.');
+      return result;
+    }
+
+    // ── Step 3: Fetch already-applied set (O(m) time / space) ─────────────
+    const applied = isDryRun
+      ? new Map<string, AppliedMigration>()
+      : await fetchAppliedMigrations(client);
+
+    // ── Step 4: Evaluate each migration ───────────────────────────────────
+    for (const file of files) {
+      const record = applied.get(file.filename);
+
+      if (record !== undefined) {
+        // File already applied — check for content drift (tampering detection).
+        if (record.checksum !== file.checksum) {
+          const msg =
+            `[migrate] DRIFT DETECTED: "${file.filename}" was previously ` +
+            `applied with checksum ${record.checksum} but the file now has ` +
+            `checksum ${file.checksum}. ` +
+            `Aborting to protect database integrity.`;
+          console.error(msg);
+          result.driftDetected.push(file.filename);
+          // Accumulate all drifted files before throwing so the log is complete.
+          continue;
+        }
+
+        console.log(`[migrate] ↷ Skipped  ${file.filename}  (already applied)`);
+        result.skipped.push(file.filename);
+        continue;
+      }
+
+      // ── Step 5: Apply pending migration in an atomic transaction ─────────
+      if (isDryRun) {
+        console.log(
+          `[migrate] [dry-run] Would apply: ${file.filename}  (checksum: ${file.checksum})`
+        );
+        result.applied.push(file.filename);
+        continue;
+      }
+
+      const startMs = Date.now();
+      await client.query('BEGIN');
+
+      try {
+        await client.query(file.sql);
+
+        const executionMs = Date.now() - startMs;
+
+        // Record INSIDE the same transaction so a runner crash after SQL
+        // execution but before the INSERT cannot leave an unrecorded migration.
+        await recordMigration(client, file.filename, file.checksum, executionMs);
+
+        await client.query('COMMIT');
+
+        console.log(`[migrate] ✓ Applied   ${file.filename}  (${executionMs} ms)`);
+        result.applied.push(file.filename);
+      } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(`[migrate] ✗ Failed   ${file.filename}`);
+        throw err; // Surface to outer try/catch; unconditionally exit(1).
+      }
+    }
+
+    // ── Step 6: Abort if drift was detected at any point ──────────────────
+    if (result.driftDetected.length > 0) {
+      throw new Error(
+        `Content drift detected in ${result.driftDetected.length} migration(s): ` +
+          result.driftDetected.join(', ')
+      );
+    }
+  } finally {
+    client.release();
+    await pool.end();
+  }
+
+  return result;
 }
 
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-    const isDryRun = process.argv.includes('--dry-run');
+  const isDryRun = process.argv.includes('--dry-run');
 
-    console.log(
-        `[migrate] Starting migration runner${isDryRun ? ' (DRY RUN)' : ''}`,
-    );
-    console.log(`[migrate] Target database: ${maskConnectionString(DATABASE_URL!)}`);
+  console.log(`[migrate] Starting migration runner${isDryRun ? ' (DRY RUN)' : ''}`);
+  console.log(`[migrate] Target database: ${maskConnectionString(DATABASE_URL!)}`);
 
-    const startMs = Date.now();
+  const startMs = Date.now();
 
-    try {
-        const result = await runMigrations(isDryRun);
+  try {
+    const result = await runMigrations(isDryRun);
 
-        const totalMs = Date.now() - startMs;
+    const totalMs = Date.now() - startMs;
 
-        console.log('');
-        console.log('─────────────────────────────────────────');
-        console.log(`[migrate] Summary  (${totalMs} ms total)`);
-        console.log(`  Applied : ${result.applied.length}`);
-        console.log(`  Skipped : ${result.skipped.length}`);
-        console.log(`  Drift   : ${result.driftDetected.length}`);
-        console.log('─────────────────────────────────────────');
-        console.log('[migrate] Done.');
-        process.exit(0);
-    } catch (err) {
-        console.error('[migrate] Migration failed:', err instanceof Error ? err.message : err);
-        process.exit(1);
-    }
+    console.log('');
+    console.log('─────────────────────────────────────────');
+    console.log(`[migrate] Summary  (${totalMs} ms total)`);
+    console.log(`  Applied : ${result.applied.length}`);
+    console.log(`  Skipped : ${result.skipped.length}`);
+    console.log(`  Drift   : ${result.driftDetected.length}`);
+    console.log('─────────────────────────────────────────');
+    console.log('[migrate] Done.');
+    process.exit(0);
+  } catch (err) {
+    console.error('[migrate] Migration failed:', err instanceof Error ? err.message : err);
+    process.exit(1);
+  }
 }
 
 /**
@@ -311,14 +307,14 @@ async function main(): Promise<void> {
  * e.g. postgresql://user:secret@host:5432/db → postgresql://user:***@host:5432/db
  */
 function maskConnectionString(url: string): string {
-    try {
-        const parsed = new URL(url);
-        if (parsed.password) parsed.password = '***';
-        return parsed.toString();
-    } catch {
-        // Not a valid URL — return a fully redacted placeholder.
-        return '[redacted]';
-    }
+  try {
+    const parsed = new URL(url);
+    if (parsed.password) parsed.password = '***';
+    return parsed.toString();
+  } catch {
+    // Not a valid URL — return a fully redacted placeholder.
+    return '[redacted]';
+  }
 }
 
 main();

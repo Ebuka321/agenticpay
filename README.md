@@ -182,28 +182,32 @@ Ensure you have the following installed:
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/Gildado/PayD.git
    cd PayD
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Environment Setup:**
+
    ```bash
    cp .env.example .env
    ```
-   *Edit `.env` with your configuration.*
+
+   _Edit `.env` with your configuration._
 
 4. **Database Setup:**
    ```bash
    # Using Docker
    docker run --name payd-postgres -e POSTGRES_PASSWORD=mypassword -p 5432:5432 -d postgres:15
    ```
-   *Or set up PostgreSQL manually.*
+   _Or set up PostgreSQL manually._
 
 ### Configuration
 
@@ -228,16 +232,19 @@ JWT_SECRET=your_jwt_secret
 ### Development
 
 Start the development server:
+
 ```bash
 npm run dev
 ```
 
 Build for production:
+
 ```bash
 npm run build
 ```
 
 Run tests:
+
 ```bash
 npm run test
 ```

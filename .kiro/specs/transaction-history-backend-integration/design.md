@@ -34,13 +34,13 @@ graph TB
     API2[Contract Events Service]
     BE1[Backend: /api/v1/audit]
     BE2[Backend: /api/events/:contractId]
-    
+
     UI -->|useQuery hooks| TQ
     TQ -->|fetch functions| API1
     TQ -->|fetch functions| API2
     API1 -->|HTTP GET| BE1
     API2 -->|HTTP GET| BE2
-    
+
     TQ -->|cache & dedupe| TQ
     UI -->|URL params| UI
 ```
@@ -102,11 +102,12 @@ interface UseTransactionHistoryResult {
 }
 
 function useTransactionHistory(
-  options: UseTransactionHistoryOptions
-): UseTransactionHistoryResult
+  options: UseTransactionHistoryOptions,
+): UseTransactionHistoryResult;
 ```
 
 **Implementation Strategy**:
+
 - Use `useQuery` from TanStack Query for initial page
 - Use `useInfiniteQuery` for pagination support
 - Query key includes all filter parameters for proper cache invalidation
@@ -126,10 +127,11 @@ interface UseFilterStateResult {
   activeFilterCount: number;
 }
 
-function useFilterState(): UseFilterStateResult
+function useFilterState(): UseFilterStateResult;
 ```
 
 **Implementation Strategy**:
+
 - Reads initial state from URL query parameters
 - Debounces filter changes (300ms)
 - Updates URL when debounced filters change
@@ -162,8 +164,8 @@ interface AuditApiResponse {
 }
 
 async function fetchAuditRecords(
-  options: FetchAuditOptions
-): Promise<AuditApiResponse>
+  options: FetchAuditOptions,
+): Promise<AuditApiResponse>;
 
 // Contract Events API
 interface FetchContractEventsOptions {
@@ -186,8 +188,8 @@ interface ContractEventsApiResponse {
 }
 
 async function fetchContractEvents(
-  options: FetchContractEventsOptions
-): Promise<ContractEventsApiResponse>
+  options: FetchContractEventsOptions,
+): Promise<ContractEventsApiResponse>;
 
 // Unified fetch
 interface FetchHistoryPageOptions {
@@ -203,11 +205,12 @@ interface FetchHistoryPageResult {
 }
 
 async function fetchHistoryPage(
-  options: FetchHistoryPageOptions
-): Promise<FetchHistoryPageResult>
+  options: FetchHistoryPageOptions,
+): Promise<FetchHistoryPageResult>;
 ```
 
 **Implementation Details**:
+
 - `fetchAuditRecords`: Calls `/api/v1/audit` with query parameters
 - `fetchContractEvents`: Calls `/api/events/{contractId}` for each contract
 - `fetchHistoryPage`: Orchestrates parallel calls, normalizes data, merges results
@@ -219,12 +222,16 @@ async function fetchHistoryPage(
 #### Normalizer Functions
 
 ```typescript
-function normalizeAuditRecord(record: AuditRecord): TimelineItem
-function normalizeContractEvent(event: ContractEvent, contractId: string): TimelineItem
-function mergeAndSortTimeline(items: TimelineItem[]): TimelineItem[]
+function normalizeAuditRecord(record: AuditRecord): TimelineItem;
+function normalizeContractEvent(
+  event: ContractEvent,
+  contractId: string,
+): TimelineItem;
+function mergeAndSortTimeline(items: TimelineItem[]): TimelineItem[];
 ```
 
 **Normalization Rules**:
+
 - Audit records → `kind: 'classic'`, status based on `successful` field
 - Contract events → `kind: 'contract'`, status always `'indexed'`
 - Timestamps converted to ISO 8601 strings
@@ -237,25 +244,25 @@ function mergeAndSortTimeline(items: TimelineItem[]): TimelineItem[]
 
 ```typescript
 interface HistoryFilters {
-  search: string;        // Transaction hash or actor search
-  status: string;        // 'confirmed' | 'pending' | 'failed' | ''
-  employee: string;      // Employee name or wallet address
-  asset: string;         // Asset code (e.g., 'USDC', 'XLM')
-  startDate: string;     // ISO date string
-  endDate: string;       // ISO date string
+  search: string; // Transaction hash or actor search
+  status: string; // 'confirmed' | 'pending' | 'failed' | ''
+  employee: string; // Employee name or wallet address
+  asset: string; // Asset code (e.g., 'USDC', 'XLM')
+  startDate: string; // ISO date string
+  endDate: string; // ISO date string
 }
 
 interface TimelineItem {
-  id: string;            // Unique identifier
-  kind: 'classic' | 'contract';
-  createdAt: string;     // ISO 8601 timestamp
-  status: string;        // 'confirmed' | 'pending' | 'failed' | 'indexed'
-  amount: string;        // Formatted amount string
-  asset: string;         // Asset code
-  actor: string;         // Source account or contract ID
+  id: string; // Unique identifier
+  kind: "classic" | "contract";
+  createdAt: string; // ISO 8601 timestamp
+  status: string; // 'confirmed' | 'pending' | 'failed' | 'indexed'
+  amount: string; // Formatted amount string
+  asset: string; // Asset code
+  actor: string; // Source account or contract ID
   txHash: string | null; // Transaction hash (null for some events)
-  label: string;         // Display label
-  badge: string;         // Badge text ('Classic' | 'Contract Event')
+  label: string; // Display label
+  badge: string; // Badge text ('Classic' | 'Contract Event')
 }
 ```
 
@@ -333,162 +340,161 @@ const contractEventsKey = [
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
-
+_A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property 1: API Data Display
 
-*For any* valid API response containing transaction data, the component should render all items from that response in the timeline.
+_For any_ valid API response containing transaction data, the component should render all items from that response in the timeline.
 
 **Validates: Requirements 1.2**
 
 ### Property 2: Error State Display
 
-*For any* API error response (4xx, 5xx, or network error), the component should display an appropriate error message categorized by error type.
+_For any_ API error response (4xx, 5xx, or network error), the component should display an appropriate error message categorized by error type.
 
 **Validates: Requirements 1.3, 10.1, 10.2, 10.3**
 
 ### Property 3: Pagination Parameters
 
-*For any* data fetch operation, the API request should include page number and page size parameters.
+_For any_ data fetch operation, the API request should include page number and page size parameters.
 
 **Validates: Requirements 2.1**
 
 ### Property 4: Page Increment on Load More
 
-*For any* load more action, the next fetch should request page number incremented by 1.
+_For any_ load more action, the next fetch should request page number incremented by 1.
 
 **Validates: Requirements 2.2**
 
 ### Property 5: Data Accumulation
 
-*For any* load more operation, the new items should be appended to the existing items array without replacing previous results.
+_For any_ load more operation, the new items should be appended to the existing items array without replacing previous results.
 
 **Validates: Requirements 2.5**
 
 ### Property 6: Filter Debouncing
 
-*For any* filter value change, the API request should be delayed by at least 300 milliseconds.
+_For any_ filter value change, the API request should be delayed by at least 300 milliseconds.
 
 **Validates: Requirements 3.1, 7.1**
 
 ### Property 7: Pagination Reset on Filter Change
 
-*For any* filter parameter change, the pagination state should reset to page 1.
+_For any_ filter parameter change, the pagination state should reset to page 1.
 
 **Validates: Requirements 3.2**
 
 ### Property 8: Filter Parameters in Request
 
-*For any* active filter values (status, employee, asset, date range, search), those values should be included as query parameters in the API request.
+_For any_ active filter values (status, employee, asset, date range, search), those values should be included as query parameters in the API request.
 
 **Validates: Requirements 3.3, 3.4, 3.5, 3.6, 3.7**
 
 ### Property 9: Multiple Filters Combined
 
-*For any* combination of multiple active filters, all filter parameters should be present in the API request simultaneously.
+_For any_ combination of multiple active filters, all filter parameters should be present in the API request simultaneously.
 
 **Validates: Requirements 3.8**
 
 ### Property 10: Dual API Calls
 
-*For any* transaction history fetch operation, both the audit API and contract events API should be called.
+_For any_ transaction history fetch operation, both the audit API and contract events API should be called.
 
 **Validates: Requirements 4.1**
 
 ### Property 11: Timeline Merging and Sorting
 
-*For any* set of audit records and contract events, the merged timeline should contain all items sorted by timestamp in descending order.
+_For any_ set of audit records and contract events, the merged timeline should contain all items sorted by timestamp in descending order.
 
 **Validates: Requirements 4.2, 4.3**
 
 ### Property 12: Contract Event Badge Differentiation
 
-*For any* contract event item in the timeline, it should display a badge value different from classic transaction items.
+_For any_ contract event item in the timeline, it should display a badge value different from classic transaction items.
 
 **Validates: Requirements 4.4**
 
 ### Property 13: Loading State Visibility
 
-*For any* loading state (initial or pagination), the appropriate loading indicator should be visible, and when loading completes, all loading indicators should be hidden.
+_For any_ loading state (initial or pagination), the appropriate loading indicator should be visible, and when loading completes, all loading indicators should be hidden.
 
 **Validates: Requirements 5.1, 5.2, 5.3**
 
 ### Property 14: Cache Hit on Repeated Query
 
-*For any* query with identical parameters executed multiple times, subsequent executions should return cached results without making new API calls.
+_For any_ query with identical parameters executed multiple times, subsequent executions should return cached results without making new API calls.
 
 **Validates: Requirements 7.2**
 
 ### Property 15: Request Cancellation on Unmount
 
-*For any* in-flight API request when the component unmounts, that request should be cancelled.
+_For any_ in-flight API request when the component unmounts, that request should be cancelled.
 
 **Validates: Requirements 7.3**
 
 ### Property 16: Request Deduplication
 
-*For any* concurrent requests with identical parameters, only one actual API call should be made.
+_For any_ concurrent requests with identical parameters, only one actual API call should be made.
 
 **Validates: Requirements 7.4**
 
 ### Property 17: URL Synchronization
 
-*For any* filter parameter change, the URL query parameters should be updated to reflect the new filter state.
+_For any_ filter parameter change, the URL query parameters should be updated to reflect the new filter state.
 
 **Validates: Requirements 8.1**
 
 ### Property 18: URL Hydration
 
-*For any* component mount with URL query parameters present, those parameters should be used as the initial filter values.
+_For any_ component mount with URL query parameters present, those parameters should be used as the initial filter values.
 
 **Validates: Requirements 8.2**
 
 ### Property 19: History Navigation State Restoration
 
-*For any* browser back/forward navigation, the filter state should be restored from the URL parameters.
+_For any_ browser back/forward navigation, the filter state should be restored from the URL parameters.
 
 **Validates: Requirements 8.3**
 
 ### Property 20: URL Encoding
 
-*For any* filter value containing special characters, the URL query parameter should be properly encoded.
+_For any_ filter value containing special characters, the URL query parameter should be properly encoded.
 
 **Validates: Requirements 8.4**
 
 ### Property 21: Required Field Display
 
-*For any* timeline item (classic or contract), all required fields for that item type should be present in the rendered output.
+_For any_ timeline item (classic or contract), all required fields for that item type should be present in the rendered output.
 
 **Validates: Requirements 9.1, 9.2**
 
 ### Property 22: Amount Formatting
 
-*For any* transaction amount displayed, it should be formatted according to the asset's decimal precision.
+_For any_ transaction amount displayed, it should be formatted according to the asset's decimal precision.
 
 **Validates: Requirements 9.3**
 
 ### Property 23: Timestamp Localization
 
-*For any* timestamp displayed, it should be formatted in the user's local timezone.
+_For any_ timestamp displayed, it should be formatted in the user's local timezone.
 
 **Validates: Requirements 9.4**
 
 ### Property 24: Status Visual Indicators
 
-*For any* transaction status value (confirmed, pending, failed, indexed), the corresponding visual indicator should be displayed.
+_For any_ transaction status value (confirmed, pending, failed, indexed), the corresponding visual indicator should be displayed.
 
 **Validates: Requirements 9.5**
 
 ### Property 25: Retry Availability
 
-*For any* error state, a retry action should be available to the user.
+_For any_ error state, a retry action should be available to the user.
 
 **Validates: Requirements 10.4**
 
 ### Property 26: Retry Execution
 
-*For any* retry action triggered, the same query with the same parameters should be re-executed.
+_For any_ retry action triggered, the same query with the same parameters should be re-executed.
 
 **Validates: Requirements 10.5**
 
@@ -505,43 +511,43 @@ const contractEventsKey = [
 
 ```typescript
 interface ErrorState {
-  type: 'network' | 'client' | 'server' | 'validation';
+  type: "network" | "client" | "server" | "validation";
   message: string;
   statusCode?: number;
   retryable: boolean;
 }
 
 function categorizeError(error: unknown): ErrorState {
-  if (error instanceof TypeError || error.message?.includes('fetch')) {
+  if (error instanceof TypeError || error.message?.includes("fetch")) {
     return {
-      type: 'network',
-      message: 'Unable to connect. Please check your internet connection.',
-      retryable: true
+      type: "network",
+      message: "Unable to connect. Please check your internet connection.",
+      retryable: true,
     };
   }
-  
+
   if (error.response?.status >= 400 && error.response?.status < 500) {
     return {
-      type: 'client',
-      message: 'Invalid request. Please check your filters and try again.',
+      type: "client",
+      message: "Invalid request. Please check your filters and try again.",
       statusCode: error.response.status,
-      retryable: false
+      retryable: false,
     };
   }
-  
+
   if (error.response?.status >= 500) {
     return {
-      type: 'server',
-      message: 'Server error. Please try again later.',
+      type: "server",
+      message: "Server error. Please try again later.",
       statusCode: error.response.status,
-      retryable: true
+      retryable: true,
     };
   }
-  
+
   return {
-    type: 'validation',
-    message: 'Unexpected data format received.',
-    retryable: false
+    type: "validation",
+    message: "Unexpected data format received.",
+    retryable: false,
   };
 }
 ```
@@ -549,6 +555,7 @@ function categorizeError(error: unknown): ErrorState {
 ### Error UI Components
 
 **Error Display**:
+
 ```typescript
 interface ErrorDisplayProps {
   error: ErrorState;
@@ -619,6 +626,7 @@ Unit tests should cover:
 **Configuration**: Each property test should run minimum 100 iterations
 
 **Test Tagging**: Each test must reference its design property:
+
 ```typescript
 // Feature: transaction-history-backend-integration, Property 11: Timeline Merging and Sorting
 ```
@@ -626,11 +634,12 @@ Unit tests should cover:
 ### Property Test Examples
 
 **Property 11: Timeline Merging and Sorting**
+
 ```typescript
-import fc from 'fast-check';
+import fc from "fast-check";
 
 // Feature: transaction-history-backend-integration, Property 11: Timeline Merging and Sorting
-test('merged timeline is sorted by timestamp descending', () => {
+test("merged timeline is sorted by timestamp descending", () => {
   fc.assert(
     fc.property(
       fc.array(arbitraryAuditRecord()),
@@ -638,69 +647,67 @@ test('merged timeline is sorted by timestamp descending', () => {
       (auditRecords, contractEvents) => {
         const result = mergeAndSortTimeline(
           auditRecords.map(normalizeAuditRecord),
-          contractEvents.map(normalizeContractEvent)
+          contractEvents.map(normalizeContractEvent),
         );
-        
+
         // Check all items are present
         expect(result.length).toBe(auditRecords.length + contractEvents.length);
-        
+
         // Check descending order
         for (let i = 0; i < result.length - 1; i++) {
           const current = new Date(result[i].createdAt).getTime();
           const next = new Date(result[i + 1].createdAt).getTime();
           expect(current).toBeGreaterThanOrEqual(next);
         }
-      }
+      },
     ),
-    { numRuns: 100 }
+    { numRuns: 100 },
   );
 });
 ```
 
 **Property 8: Filter Parameters in Request**
+
 ```typescript
 // Feature: transaction-history-backend-integration, Property 8: Filter Parameters in Request
-test('active filters are included in API request', () => {
+test("active filters are included in API request", () => {
   fc.assert(
-    fc.property(
-      arbitraryHistoryFilters(),
-      (filters) => {
-        const queryString = buildQueryString(filters);
-        const params = new URLSearchParams(queryString);
-        
-        // For each non-empty filter, verify it's in the query string
-        if (filters.status) expect(params.get('status')).toBe(filters.status);
-        if (filters.employee) expect(params.get('employee')).toBe(filters.employee);
-        if (filters.asset) expect(params.get('asset')).toBe(filters.asset);
-        if (filters.startDate) expect(params.get('startDate')).toBe(filters.startDate);
-        if (filters.endDate) expect(params.get('endDate')).toBe(filters.endDate);
-        if (filters.search) expect(params.get('search')).toBe(filters.search);
-      }
-    ),
-    { numRuns: 100 }
+    fc.property(arbitraryHistoryFilters(), (filters) => {
+      const queryString = buildQueryString(filters);
+      const params = new URLSearchParams(queryString);
+
+      // For each non-empty filter, verify it's in the query string
+      if (filters.status) expect(params.get("status")).toBe(filters.status);
+      if (filters.employee)
+        expect(params.get("employee")).toBe(filters.employee);
+      if (filters.asset) expect(params.get("asset")).toBe(filters.asset);
+      if (filters.startDate)
+        expect(params.get("startDate")).toBe(filters.startDate);
+      if (filters.endDate) expect(params.get("endDate")).toBe(filters.endDate);
+      if (filters.search) expect(params.get("search")).toBe(filters.search);
+    }),
+    { numRuns: 100 },
   );
 });
 ```
 
 **Property 20: URL Encoding**
+
 ```typescript
 // Feature: transaction-history-backend-integration, Property 20: URL Encoding
-test('special characters in filters are properly URL encoded', () => {
+test("special characters in filters are properly URL encoded", () => {
   fc.assert(
-    fc.property(
-      fc.string(),
-      (filterValue) => {
-        const encoded = encodeFilterValue(filterValue);
-        const decoded = decodeURIComponent(encoded);
-        
-        // Round trip should preserve the value
-        expect(decoded).toBe(filterValue);
-        
-        // Encoded value should be safe for URLs
-        expect(encoded).not.toMatch(/[^A-Za-z0-9\-_.~%]/);
-      }
-    ),
-    { numRuns: 100 }
+    fc.property(fc.string(), (filterValue) => {
+      const encoded = encodeFilterValue(filterValue);
+      const decoded = decodeURIComponent(encoded);
+
+      // Round trip should preserve the value
+      expect(decoded).toBe(filterValue);
+
+      // Encoded value should be safe for URLs
+      expect(encoded).not.toMatch(/[^A-Za-z0-9\-_.~%]/);
+    }),
+    { numRuns: 100 },
   );
 });
 ```
@@ -715,8 +722,8 @@ function arbitraryAuditRecord(): fc.Arbitrary<AuditRecord> {
     source_account: fc.string({ minLength: 56, maxLength: 56 }),
     fee_charged: fc.integer({ min: 0 }).map(String),
     successful: fc.boolean(),
-    created_at: fc.date().map(d => d.toISOString()),
-    stellar_created_at: fc.date().map(d => d.toISOString())
+    created_at: fc.date().map((d) => d.toISOString()),
+    stellar_created_at: fc.date().map((d) => d.toISOString()),
   });
 }
 
@@ -724,25 +731,33 @@ function arbitraryContractEvent(): fc.Arbitrary<ContractEvent> {
   return fc.record({
     event_id: fc.uuid(),
     contract_id: fc.string({ minLength: 56, maxLength: 56 }),
-    event_type: fc.constantFrom('transfer', 'payment', 'approval'),
+    event_type: fc.constantFrom("transfer", "payment", "approval"),
     payload: fc.record({
       amount: fc.integer({ min: 0 }).map(String),
-      asset_code: fc.constantFrom('USDC', 'XLM', 'EURC')
+      asset_code: fc.constantFrom("USDC", "XLM", "EURC"),
     }),
     ledger_sequence: fc.integer({ min: 1 }),
     tx_hash: fc.hexaString({ minLength: 64, maxLength: 64 }),
-    created_at: fc.date().map(d => d.toISOString())
+    created_at: fc.date().map((d) => d.toISOString()),
   });
 }
 
 function arbitraryHistoryFilters(): fc.Arbitrary<HistoryFilters> {
   return fc.record({
-    search: fc.option(fc.string(), { nil: '' }),
-    status: fc.option(fc.constantFrom('confirmed', 'pending', 'failed'), { nil: '' }),
-    employee: fc.option(fc.string(), { nil: '' }),
-    asset: fc.option(fc.constantFrom('USDC', 'XLM', 'EURC'), { nil: '' }),
-    startDate: fc.option(fc.date().map(d => d.toISOString().split('T')[0]), { nil: '' }),
-    endDate: fc.option(fc.date().map(d => d.toISOString().split('T')[0]), { nil: '' })
+    search: fc.option(fc.string(), { nil: "" }),
+    status: fc.option(fc.constantFrom("confirmed", "pending", "failed"), {
+      nil: "",
+    }),
+    employee: fc.option(fc.string(), { nil: "" }),
+    asset: fc.option(fc.constantFrom("USDC", "XLM", "EURC"), { nil: "" }),
+    startDate: fc.option(
+      fc.date().map((d) => d.toISOString().split("T")[0]),
+      { nil: "" },
+    ),
+    endDate: fc.option(
+      fc.date().map((d) => d.toISOString().split("T")[0]),
+      { nil: "" },
+    ),
   });
 }
 ```
@@ -947,7 +962,7 @@ Integration tests should verify:
 
 1. **Infinite Scroll**: Replace "Load More" button with infinite scroll
 2. **Real-time Updates**: WebSocket integration for live transaction updates
-3. **Advanced Filtering**: 
+3. **Advanced Filtering**:
    - Amount range filter
    - Multiple status selection
    - Saved filter presets
@@ -968,11 +983,13 @@ Integration tests should verify:
 ### API Contract Examples
 
 **Audit API Request**:
+
 ```
 GET /api/v1/audit?page=1&limit=20&status=confirmed&startDate=2024-01-01
 ```
 
 **Audit API Response**:
+
 ```json
 {
   "data": [
@@ -993,11 +1010,13 @@ GET /api/v1/audit?page=1&limit=20&status=confirmed&startDate=2024-01-01
 ```
 
 **Contract Events API Request**:
+
 ```
 GET /api/events/CABC123.../page=1&limit=10
 ```
 
 **Contract Events API Response**:
+
 ```json
 {
   "success": true,

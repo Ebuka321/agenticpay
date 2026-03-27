@@ -1,6 +1,15 @@
 import { MultiSigService, SignerInfo, MultiSigThresholds } from '../multiSigService.js';
 import { StellarService } from '../stellarService.js';
-import { Keypair, Transaction, Networks, Account, TransactionBuilder, Operation, Asset, Memo } from '@stellar/stellar-sdk';
+import {
+  Keypair,
+  Transaction,
+  Networks,
+  Account,
+  TransactionBuilder,
+  Operation,
+  Asset,
+  Memo,
+} from '@stellar/stellar-sdk';
 
 // Mock the StellarService
 jest.mock('../stellarService');
@@ -330,13 +339,15 @@ describe('MultiSigService', () => {
     beforeEach(() => {
       // Replace the mocked verifySignature with real logic so we can
       // validate the authorization weight model end-to-end.
-      (StellarService.verifySignature as jest.Mock).mockImplementation((transaction: Transaction, publicKey: string) => {
-        const rawSig = transaction.signatures.find((sig) => {
-          const keypair = Keypair.fromPublicKey(publicKey);
-          return sig.hint().toString('base64') === keypair.signatureHint().toString('base64');
-        });
-        return !!rawSig;
-      });
+      (StellarService.verifySignature as jest.Mock).mockImplementation(
+        (transaction: Transaction, publicKey: string) => {
+          const rawSig = transaction.signatures.find((sig) => {
+            const keypair = Keypair.fromPublicKey(publicKey);
+            return sig.hint().toString('base64') === keypair.signatureHint().toString('base64');
+          });
+          return !!rawSig;
+        }
+      );
     });
 
     it('should block authorization when only master key signs (masterWeight=0)', () => {
@@ -365,8 +376,18 @@ describe('MultiSigService', () => {
         signers: [master],
       });
 
-      expect(MultiSigService.computeSignedWeight(txMasterOnly, master.publicKey(), signers, thresholds)).toBe(0);
-      expect(MultiSigService.canMeetThreshold(txMasterOnly, master.publicKey(), signers, thresholds, 'med')).toBe(false);
+      expect(
+        MultiSigService.computeSignedWeight(txMasterOnly, master.publicKey(), signers, thresholds)
+      ).toBe(0);
+      expect(
+        MultiSigService.canMeetThreshold(
+          txMasterOnly,
+          master.publicKey(),
+          signers,
+          thresholds,
+          'med'
+        )
+      ).toBe(false);
     });
 
     it('should allow authorization when enough signer keys sign (2-of-2 for medium)', () => {
@@ -395,8 +416,18 @@ describe('MultiSigService', () => {
         signers: [signerA, signerB],
       });
 
-      expect(MultiSigService.computeSignedWeight(txTwoSigners, master.publicKey(), signers, thresholds)).toBe(2);
-      expect(MultiSigService.canMeetThreshold(txTwoSigners, master.publicKey(), signers, thresholds, 'med')).toBe(true);
+      expect(
+        MultiSigService.computeSignedWeight(txTwoSigners, master.publicKey(), signers, thresholds)
+      ).toBe(2);
+      expect(
+        MultiSigService.canMeetThreshold(
+          txTwoSigners,
+          master.publicKey(),
+          signers,
+          thresholds,
+          'med'
+        )
+      ).toBe(true);
     });
 
     it('should block authorization when only one signer key signs (medium threshold not met)', () => {
@@ -425,8 +456,18 @@ describe('MultiSigService', () => {
         signers: [signerA],
       });
 
-      expect(MultiSigService.computeSignedWeight(txOneSigner, master.publicKey(), signers, thresholds)).toBe(1);
-      expect(MultiSigService.canMeetThreshold(txOneSigner, master.publicKey(), signers, thresholds, 'med')).toBe(false);
+      expect(
+        MultiSigService.computeSignedWeight(txOneSigner, master.publicKey(), signers, thresholds)
+      ).toBe(1);
+      expect(
+        MultiSigService.canMeetThreshold(
+          txOneSigner,
+          master.publicKey(),
+          signers,
+          thresholds,
+          'med'
+        )
+      ).toBe(false);
     });
   });
 });

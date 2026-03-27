@@ -97,10 +97,9 @@ export class TrustlineService {
       );
       return result.rows;
     }
-    const result = await pool.query(
-      'SELECT * FROM employee_trustlines WHERE employee_id = $1',
-      [employeeId]
-    );
+    const result = await pool.query('SELECT * FROM employee_trustlines WHERE employee_id = $1', [
+      employeeId,
+    ]);
     return result.rows;
   }
 

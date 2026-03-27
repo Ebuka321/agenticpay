@@ -28,15 +28,11 @@ describe('Clawback Support for ORGUSD', () => {
       };
 
       jest.spyOn(StellarService, 'getServer').mockReturnValue(mockServer as any);
-      jest.spyOn(StellarService, 'getNetworkPassphrase').mockReturnValue(
-        'Test SDF Network ; September 2015'
-      );
+      jest
+        .spyOn(StellarService, 'getNetworkPassphrase')
+        .mockReturnValue('Test SDF Network ; September 2015');
 
-      const asset = await AssetService.issueOrgUsdAsset(
-        issuerKeypair,
-        distributorKeypair,
-        '1000'
-      );
+      const asset = await AssetService.issueOrgUsdAsset(issuerKeypair, distributorKeypair, '1000');
 
       expect(asset).toBeInstanceOf(Asset);
       expect(asset.code).toBe('ORGUSD');
@@ -57,9 +53,9 @@ describe('Clawback Support for ORGUSD', () => {
       };
 
       jest.spyOn(StellarService, 'getServer').mockReturnValue(mockServer as any);
-      jest.spyOn(StellarService, 'getNetworkPassphrase').mockReturnValue(
-        'Test SDF Network ; September 2015'
-      );
+      jest
+        .spyOn(StellarService, 'getNetworkPassphrase')
+        .mockReturnValue('Test SDF Network ; September 2015');
 
       await expect(
         AssetService.issueOrgUsdAsset(issuerKeypair, distributorKeypair, '1000')
@@ -72,9 +68,9 @@ describe('Clawback Support for ORGUSD', () => {
     const targetAccount = Keypair.random().publicKey();
 
     beforeEach(() => {
-      jest.spyOn(StellarService, 'getNetworkPassphrase').mockReturnValue(
-        'Test SDF Network ; September 2015'
-      );
+      jest
+        .spyOn(StellarService, 'getNetworkPassphrase')
+        .mockReturnValue('Test SDF Network ; September 2015');
     });
 
     it('returns a transaction hash on success and writes audit log', async () => {
@@ -98,13 +94,18 @@ describe('Clawback Support for ORGUSD', () => {
       const mockQuery = jest.fn().mockResolvedValue({ rows: [] });
       jest.spyOn(pool, 'query').mockImplementation(mockQuery);
 
-      const hash = await AssetService.clawbackAsset(issuerKeypair, targetAccount, '100', 'compliance');
+      const hash = await AssetService.clawbackAsset(
+        issuerKeypair,
+        targetAccount,
+        '100',
+        'compliance'
+      );
 
       expect(hash).toBe(mockTxHash);
 
       // Verify audit trail was written
-      const auditCall = mockQuery.mock.calls.find((args: any[]) =>
-        typeof args[0] === 'string' && args[0].includes('clawback_audit_logs')
+      const auditCall = mockQuery.mock.calls.find(
+        (args: any[]) => typeof args[0] === 'string' && args[0].includes('clawback_audit_logs')
       );
       expect(auditCall).toBeDefined();
       const params = auditCall![1] as string[];
@@ -132,9 +133,9 @@ describe('Clawback Support for ORGUSD', () => {
         errorMessage: 'op_no_clawback',
       } as any);
 
-      await expect(
-        AssetService.clawbackAsset(issuerKeypair, targetAccount, '50')
-      ).rejects.toThrow('Transaction simulation failed');
+      await expect(AssetService.clawbackAsset(issuerKeypair, targetAccount, '50')).rejects.toThrow(
+        'Transaction simulation failed'
+      );
 
       expect(mockServer.submitTransaction).not.toHaveBeenCalled();
     });
@@ -162,8 +163,8 @@ describe('Clawback Support for ORGUSD', () => {
 
       await AssetService.clawbackAsset(issuerKeypair, targetAccount, '25');
 
-      const auditCall = mockQuery.mock.calls.find((args: any[]) =>
-        typeof args[0] === 'string' && args[0].includes('clawback_audit_logs')
+      const auditCall = mockQuery.mock.calls.find(
+        (args: any[]) => typeof args[0] === 'string' && args[0].includes('clawback_audit_logs')
       );
       expect(auditCall).toBeDefined();
       const params = auditCall![1] as any[];
@@ -175,9 +176,9 @@ describe('Clawback Support for ORGUSD', () => {
     const issuerKeypair = Keypair.random();
 
     beforeEach(() => {
-      jest.spyOn(StellarService, 'getNetworkPassphrase').mockReturnValue(
-        'Test SDF Network ; September 2015'
-      );
+      jest
+        .spyOn(StellarService, 'getNetworkPassphrase')
+        .mockReturnValue('Test SDF Network ; September 2015');
     });
 
     it('returns a transaction hash when clawback of claimable balance succeeds', async () => {
@@ -221,9 +222,9 @@ describe('Clawback Support for ORGUSD', () => {
         errorMessage: 'balance_not_found',
       } as any);
 
-      await expect(
-        AssetService.clawbackClaimableBalance(issuerKeypair, balanceId)
-      ).rejects.toThrow('Transaction simulation failed');
+      await expect(AssetService.clawbackClaimableBalance(issuerKeypair, balanceId)).rejects.toThrow(
+        'Transaction simulation failed'
+      );
     });
   });
 });

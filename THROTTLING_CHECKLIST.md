@@ -266,7 +266,7 @@
 - [ ] Documentation complete
 - [ ] Ready for review
 
-**Signed:** ********\_******** **Date:** ****\_****
+**Signed:** **\*\*\*\***\_**\*\*\*\*** **Date:** \***\*\_\*\***
 
 ### Reviewer
 
@@ -275,7 +275,7 @@
 - [ ] Documentation reviewed
 - [ ] Approved for merge
 
-**Signed:** ********\_******** **Date:** ****\_****
+**Signed:** **\*\*\*\***\_**\*\*\*\*** **Date:** \***\*\_\*\***
 
 ### QA
 
@@ -284,7 +284,7 @@
 - [ ] Load testing complete
 - [ ] Approved for deployment
 
-**Signed:** ********\_******** **Date:** ****\_****
+**Signed:** **\*\*\*\***\_**\*\*\*\*** **Date:** \***\*\_\*\***
 
 ### DevOps
 
@@ -293,7 +293,7 @@
 - [ ] Alerts configured
 - [ ] Ready for production
 
-**Signed:** ********\_******** **Date:** ****\_****
+**Signed:** **\*\*\*\***\_**\*\*\*\*** **Date:** \***\*\_\*\***
 
 ## Notes
 

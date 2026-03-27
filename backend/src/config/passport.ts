@@ -12,12 +12,12 @@ async function findOrCreateSocialUser(
   provider: 'google' | 'github',
   providerId: string,
   email: string | undefined,
-  displayName: string | undefined,
+  displayName: string | undefined
 ) {
   // 1. Check if social identity already exists (fastest path)
   const identityResult = await pool.query(
     'SELECT u.* FROM social_identities si JOIN users u ON u.id = si.user_id WHERE si.provider = $1 AND si.provider_id = $2',
-    [provider, providerId],
+    [provider, providerId]
   );
   if (identityResult.rows.length > 0) {
     return identityResult.rows[0];
@@ -34,7 +34,7 @@ async function findOrCreateSocialUser(
   if (!user) {
     const newUserResult = await pool.query(
       'INSERT INTO users (email, name, role) VALUES ($1, $2, $3) RETURNING *',
-      [email || null, displayName || null, 'EMPLOYEE'],
+      [email || null, displayName || null, 'EMPLOYEE']
     );
     user = newUserResult.rows[0];
   }
@@ -42,7 +42,7 @@ async function findOrCreateSocialUser(
   // 4. Link social identity to the user account
   await pool.query(
     'INSERT INTO social_identities (user_id, provider, provider_id) VALUES ($1, $2, $3) ON CONFLICT (provider, provider_id) DO NOTHING',
-    [user.id, provider, providerId],
+    [user.id, provider, providerId]
   );
 
   return user;
@@ -68,8 +68,8 @@ passport.use(
       } catch (err) {
         return done(err as Error);
       }
-    },
-  ),
+    }
+  )
 );
 
 // ── GitHub OAuth2 Strategy ────────────────────────────────────────────────────
@@ -85,7 +85,11 @@ passport.use(
       try {
         const email = profile.emails?.[0]?.value || profile._json?.email;
         if (!email) {
-          return done(new Error('No email found in GitHub profile. Ensure your GitHub email is public or grant the user:email scope.'));
+          return done(
+            new Error(
+              'No email found in GitHub profile. Ensure your GitHub email is public or grant the user:email scope.'
+            )
+          );
         }
         const displayName = profile.displayName || profile.username;
         const user = await findOrCreateSocialUser('github', profile.id, email, displayName);
@@ -93,8 +97,8 @@ passport.use(
       } catch (err) {
         return done(err as Error);
       }
-    },
-  ),
+    }
+  )
 );
 
 // ── Serialization (used only if sessions were enabled) ────────────────────────

@@ -131,7 +131,14 @@ export class EmployeeService {
     } = params;
     const offset = (page - 1) * limit;
 
-    const allowedSortColumns = ['created_at', 'first_name', 'last_name', 'email', 'hire_date', 'base_salary'];
+    const allowedSortColumns = [
+      'created_at',
+      'first_name',
+      'last_name',
+      'email',
+      'hire_date',
+      'base_salary',
+    ];
     const sortColumn = allowedSortColumns.includes(sort_by) ? sort_by : 'created_at';
     const sortDirection = sort_order === 'asc' ? 'ASC' : 'DESC';
 
@@ -190,9 +197,10 @@ export class EmployeeService {
       values.push(salary_max);
     }
 
-    const orderBy = ftsParamIndex !== null
-      ? `ORDER BY ts_rank(search_vector, plainto_tsquery('english', $${ftsParamIndex})) DESC, ${sortColumn} ${sortDirection}`
-      : `ORDER BY ${sortColumn} ${sortDirection}`;
+    const orderBy =
+      ftsParamIndex !== null
+        ? `ORDER BY ts_rank(search_vector, plainto_tsquery('english', $${ftsParamIndex})) DESC, ${sortColumn} ${sortDirection}`
+        : `ORDER BY ${sortColumn} ${sortDirection}`;
 
     const query = `
       SELECT *, count(*) OVER() as total_count

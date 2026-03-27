@@ -160,9 +160,7 @@ export class SearchService {
 
     // Keyword search on tx_hash or source_account
     if (query && query.trim()) {
-      conditions.push(
-        `(tx_hash ILIKE $${paramIndex} OR source_account ILIKE $${paramIndex})`
-      );
+      conditions.push(`(tx_hash ILIKE $${paramIndex} OR source_account ILIKE $${paramIndex})`);
       params.push(`%${query.trim()}%`);
       paramIndex++;
     }
@@ -194,8 +192,7 @@ export class SearchService {
       params.push(dateTo);
     }
 
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // Validate sort column against actual table columns
     const allowedSortColumns = ['created_at', 'stellar_created_at', 'tx_hash', 'fee_charged'];

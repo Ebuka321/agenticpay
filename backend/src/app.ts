@@ -59,10 +59,7 @@ app.get('/api/openapi.json', (req, res) => {
 });
 
 // Export openapi.json for frontend
-fs.writeFileSync(
-  path.join(__dirname, '../openapi.json'),
-  JSON.stringify(swaggerSpec, null, 2)
-);
+fs.writeFileSync(path.join(__dirname, '../openapi.json'), JSON.stringify(swaggerSpec, null, 2));
 
 // Middleware for versioning
 app.use(apiVersionMiddleware);

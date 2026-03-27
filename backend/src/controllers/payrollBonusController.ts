@@ -11,7 +11,8 @@ export class PayrollBonusController {
 
       if (!organizationId || !periodStart || !periodEnd) {
         res.status(400).json({
-          error: 'Missing required fields: periodStart, periodEnd (user must belong to an organization)',
+          error:
+            'Missing required fields: periodStart, periodEnd (user must belong to an organization)',
         });
         return;
       }
@@ -204,7 +205,7 @@ export class PayrollBonusController {
       for (let i = 0; i < insertedItems.length; i++) {
         const item = insertedItems[i]!;
         const originalItem = items[i]!;
-        
+
         await PayrollAuditService.logItemAdded(
           organizationId!,
           payrollRunId,
@@ -303,7 +304,10 @@ export class PayrollBonusController {
         return;
       }
 
-      const payrollRun = await PayrollBonusService.updatePayrollRunStatus(parseInt(id as string, 10), status);
+      const payrollRun = await PayrollBonusService.updatePayrollRunStatus(
+        parseInt(id as string, 10),
+        status
+      );
 
       if (!payrollRun) {
         res.status(404).json({ error: 'Payroll run not found' });

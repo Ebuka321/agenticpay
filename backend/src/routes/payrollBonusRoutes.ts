@@ -104,42 +104,42 @@ import { PayrollBonusService } from '../services/payrollBonusService.js';
 import logger from '../utils/logger.js';
 
 router.post('/runs/:id/execute', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { organizationId } = req.body;
+  try {
+    const { id } = req.params;
+    const { organizationId } = req.body;
 
-        if (!organizationId) {
-            return res.status(400).json({ error: 'Missing organizationId' });
-        }
-
-        // Check if payroll run exists
-        const run = await PayrollBonusService.getPayrollRunById(parseInt(id, 10));
-        if (!run) {
-            return res.status(404).json({ error: 'Payroll run not found' });
-        }
-
-        if (run.status === 'processing' || run.status === 'completed') {
-            return res.status(400).json({ error: `Cannot execute run in status ${run.status}` });
-        }
-
-        // Add to queue
-        const jobId = await PayrollQueueService.addPayrollJob({
-            payrollRunId: parseInt(id, 10),
-            organizationId: parseInt(organizationId, 10),
-        });
-
-        // Update status to pending/processing in background soon
-        await PayrollBonusService.updatePayrollRunStatus(parseInt(id, 10), 'pending');
-
-        res.status(202).json({
-            success: true,
-            message: 'Payroll execution started in background',
-            jobId,
-        });
-    } catch (error) {
-        logger.error('Failed to trigger payroll execution', error);
-        res.status(500).json({ error: 'Failed to trigger payroll execution' });
+    if (!organizationId) {
+      return res.status(400).json({ error: 'Missing organizationId' });
     }
+
+    // Check if payroll run exists
+    const run = await PayrollBonusService.getPayrollRunById(parseInt(id, 10));
+    if (!run) {
+      return res.status(404).json({ error: 'Payroll run not found' });
+    }
+
+    if (run.status === 'processing' || run.status === 'completed') {
+      return res.status(400).json({ error: `Cannot execute run in status ${run.status}` });
+    }
+
+    // Add to queue
+    const jobId = await PayrollQueueService.addPayrollJob({
+      payrollRunId: parseInt(id, 10),
+      organizationId: parseInt(organizationId, 10),
+    });
+
+    // Update status to pending/processing in background soon
+    await PayrollBonusService.updatePayrollRunStatus(parseInt(id, 10), 'pending');
+
+    res.status(202).json({
+      success: true,
+      message: 'Payroll execution started in background',
+      jobId,
+    });
+  } catch (error) {
+    logger.error('Failed to trigger payroll execution', error);
+    res.status(500).json({ error: 'Failed to trigger payroll execution' });
+  }
 });
 
 /**

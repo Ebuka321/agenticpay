@@ -23,9 +23,8 @@ export class ExportService {
         doc.on('error', reject);
 
         // Determine payment type label
-        const paymentTypeLabel = transaction.itemType === 'bonus' 
-          ? 'Performance Bonus Payment' 
-          : 'Base Salary Payment';
+        const paymentTypeLabel =
+          transaction.itemType === 'bonus' ? 'Performance Bonus Payment' : 'Base Salary Payment';
 
         // Header
         doc
@@ -116,11 +115,17 @@ export class ExportService {
         { header: 'Generated At', key: 'date', width: 30 },
       ];
 
-      const baseTransactions = transactions.filter(tx => tx.itemType !== 'bonus');
-      const bonusTransactions = transactions.filter(tx => tx.itemType === 'bonus');
+      const baseTransactions = transactions.filter((tx) => tx.itemType !== 'bonus');
+      const bonusTransactions = transactions.filter((tx) => tx.itemType === 'bonus');
       const sumAmount = transactions.reduce((acc, tx) => acc + parseFloat(tx.amount || '0'), 0);
-      const baseSumAmount = baseTransactions.reduce((acc, tx) => acc + parseFloat(tx.amount || '0'), 0);
-      const bonusSumAmount = bonusTransactions.reduce((acc, tx) => acc + parseFloat(tx.amount || '0'), 0);
+      const baseSumAmount = baseTransactions.reduce(
+        (acc, tx) => acc + parseFloat(tx.amount || '0'),
+        0
+      );
+      const bonusSumAmount = bonusTransactions.reduce(
+        (acc, tx) => acc + parseFloat(tx.amount || '0'),
+        0
+      );
 
       summarySheet.addRow({
         batchId,

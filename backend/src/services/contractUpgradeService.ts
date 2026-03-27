@@ -14,7 +14,14 @@
  * Time/space annotations follow the same convention as freezeService.ts.
  */
 
-import { Keypair, TransactionBuilder, Networks, SorobanRpc, Contract, xdr } from '@stellar/stellar-sdk';
+import {
+  Keypair,
+  TransactionBuilder,
+  Networks,
+  SorobanRpc,
+  Contract,
+  xdr,
+} from '@stellar/stellar-sdk';
 import { pool } from '../config/database.js';
 
 // ---------------------------------------------------------------------------
@@ -26,9 +33,7 @@ function getSorobanRpcUrl(): string {
 }
 
 function getNetworkPassphrase(): string {
-  return process.env.STELLAR_NETWORK === 'MAINNET'
-    ? Networks.PUBLIC
-    : Networks.TESTNET;
+  return process.env.STELLAR_NETWORK === 'MAINNET' ? Networks.PUBLIC : Networks.TESTNET;
 }
 
 function getRpcServer(): SorobanRpc.Server {
@@ -64,7 +69,14 @@ export interface UpgradeLog {
   registry_id: number;
   previous_wasm_hash: string;
   new_wasm_hash: string;
-  status: 'pending' | 'simulated' | 'confirmed' | 'executing' | 'completed' | 'failed' | 'cancelled';
+  status:
+    | 'pending'
+    | 'simulated'
+    | 'confirmed'
+    | 'executing'
+    | 'completed'
+    | 'failed'
+    | 'cancelled';
   simulation_result: UpgradeSimulationResult | null;
   tx_hash: string | null;
   migration_steps: MigrationStep[];
@@ -185,7 +197,10 @@ export class ContractUpgradeService {
   ): Promise<{ valid: boolean; reason?: string }> {
     // ── 1. Format check ──────────────────────────────────────────────────
     if (!WASM_HASH_REGEX.test(newWasmHash)) {
-      return { valid: false, reason: 'WASM hash must be exactly 64 lowercase hex characters (SHA-256).' };
+      return {
+        valid: false,
+        reason: 'WASM hash must be exactly 64 lowercase hex characters (SHA-256).',
+      };
     }
 
     // ── 2. Retrieve current hash from registry ───────────────────────────
@@ -195,7 +210,10 @@ export class ContractUpgradeService {
     }
 
     if (newWasmHash.toLowerCase() === contract.current_wasm_hash.toLowerCase()) {
-      return { valid: false, reason: 'New WASM hash is identical to the currently deployed hash. No upgrade needed.' };
+      return {
+        valid: false,
+        reason: 'New WASM hash is identical to the currently deployed hash. No upgrade needed.',
+      };
     }
 
     // ── 3. On-chain existence check via Soroban RPC ──────────────────────
@@ -212,13 +230,17 @@ export class ContractUpgradeService {
       if (!response.entries || response.entries.length === 0) {
         return {
           valid: false,
-          reason: 'WASM hash not found on the network. Upload the WASM bytecode first via `stellar contract upload`.',
+          reason:
+            'WASM hash not found on the network. Upload the WASM bytecode first via `stellar contract upload`.',
         };
       }
     } catch (rpcError: unknown) {
       // RPC unreachable — skip on-chain check rather than blocking the flow.
       // Log the issue but allow the admin to proceed with format-valid hashes.
-      console.warn('ContractUpgradeService: RPC reachability check failed, skipping on-chain validation:', rpcError);
+      console.warn(
+        'ContractUpgradeService: RPC reachability check failed, skipping on-chain validation:',
+        rpcError
+      );
     }
 
     return { valid: true };
@@ -299,10 +321,7 @@ export class ContractUpgradeService {
         const sorobanContract = new Contract(contract.contract_id);
         const hashBytes = Buffer.from(newWasmHash, 'hex');
 
-        const upgradeOp = sorobanContract.call(
-          'upgrade',
-          xdr.ScVal.scvBytes(hashBytes)
-        );
+        const upgradeOp = sorobanContract.call('upgrade', xdr.ScVal.scvBytes(hashBytes));
 
         const tx = new TransactionBuilder(sourceAccount, {
           fee: '1000000', // generous upper bound for simulation
@@ -384,12 +403,7 @@ export class ContractUpgradeService {
        SET status = $1, simulation_result = $2, error_message = $3,
            completed_at = CASE WHEN $1 = 'failed' THEN NOW() ELSE NULL END
        WHERE id = $4`,
-      [
-        newStatus,
-        JSON.stringify(simulation),
-        simulation.error ?? null,
-        upgradeLogId,
-      ]
+      [newStatus, JSON.stringify(simulation), simulation.error ?? null, upgradeLogId]
     );
 
     return { upgradeLogId, simulation };
@@ -493,14 +507,15 @@ export class ContractUpgradeService {
     if (!log) throw new Error('Upgrade log not found.');
 
     if (!['simulated', 'confirmed'].includes(log.status)) {
-      throw new Error(`Cannot execute upgrade in status '${log.status}'. Expected 'simulated' or 'confirmed'.`);
+      throw new Error(
+        `Cannot execute upgrade in status '${log.status}'. Expected 'simulated' or 'confirmed'.`
+      );
     }
 
     // ── Advance status to 'confirmed' then 'executing' ───────────────────
-    await pool.query(
-      `UPDATE contract_upgrade_logs SET status = 'executing' WHERE id = $1`,
-      [upgradeLogId]
-    );
+    await pool.query(`UPDATE contract_upgrade_logs SET status = 'executing' WHERE id = $1`, [
+      upgradeLogId,
+    ]);
 
     let txHash: string;
 
@@ -523,10 +538,7 @@ export class ContractUpgradeService {
       const sorobanContract = new Contract(contractId);
       const hashBytes = Buffer.from(log.new_wasm_hash, 'hex');
 
-      const upgradeOp = sorobanContract.call(
-        'upgrade',
-        xdr.ScVal.scvBytes(hashBytes)
-      );
+      const upgradeOp = sorobanContract.call('upgrade', xdr.ScVal.scvBytes(hashBytes));
 
       const rawTx = new TransactionBuilder(sourceAccount, {
         fee: '1000000',
@@ -584,10 +596,10 @@ export class ContractUpgradeService {
     }
 
     // ── Persist tx hash, start migration ────────────────────────────────
-    await pool.query(
-      `UPDATE contract_upgrade_logs SET tx_hash = $1 WHERE id = $2`,
-      [txHash, upgradeLogId]
-    );
+    await pool.query(`UPDATE contract_upgrade_logs SET tx_hash = $1 WHERE id = $2`, [
+      txHash,
+      upgradeLogId,
+    ]);
 
     // Run migration steps asynchronously (fire-and-forget from the
     // caller's perspective; the client polls /status).
@@ -624,7 +636,9 @@ export class ContractUpgradeService {
       // NOT_FOUND or still PENDING — continue polling
     }
 
-    throw new Error(`Transaction ${hash} did not confirm within ${MAX_POLLS * POLL_INTERVAL_MS / 1000}s.`);
+    throw new Error(
+      `Transaction ${hash} did not confirm within ${(MAX_POLLS * POLL_INTERVAL_MS) / 1000}s.`
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -676,7 +690,6 @@ export class ContractUpgradeService {
         );
         return;
       }
-
 
       await ContractUpgradeService.persistMigrationSteps(upgradeLogId, steps);
     }
@@ -746,10 +759,10 @@ export class ContractUpgradeService {
     upgradeLogId: number,
     steps: MigrationStep[]
   ): Promise<void> {
-    await pool.query(
-      `UPDATE contract_upgrade_logs SET migration_steps = $1 WHERE id = $2`,
-      [JSON.stringify(steps), upgradeLogId]
-    );
+    await pool.query(`UPDATE contract_upgrade_logs SET migration_steps = $1 WHERE id = $2`, [
+      JSON.stringify(steps),
+      upgradeLogId,
+    ]);
   }
 
   // -------------------------------------------------------------------------
@@ -804,7 +817,6 @@ export class ContractUpgradeService {
       page: Math.max(1, page),
       limit: safeLimit,
     };
-
   }
 
   /**

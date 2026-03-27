@@ -35,7 +35,6 @@ export const extractTenantId = (req: Request, res: Response, next: NextFunction)
     }
   }
 
-
   // Method 3: Extract from authenticated user context
   if (!tenantId && req.user?.organizationId) {
     tenantId = req.user.organizationId;

@@ -19,103 +19,112 @@ import { getAssetIssuer } from '../config/assets.js';
 const notificationQueueService = new NotificationQueueService();
 
 export const payrollWorker = new Worker<PayrollJobData>(
-    PAYROLL_QUEUE_NAME,
-    async (job: Job<PayrollJobData>) => {
-        const { payrollRunId } = job.data;
-        logger.info(`Processing payroll run ${payrollRunId} (Job: ${job.id})`);
+  PAYROLL_QUEUE_NAME,
+  async (job: Job<PayrollJobData>) => {
+    const { payrollRunId } = job.data;
+    logger.info(`Processing payroll run ${payrollRunId} (Job: ${job.id})`);
+
+    try {
+      // 1. Get payroll run and items
+      const summary = await PayrollBonusService.getPayrollRunSummary(payrollRunId);
+      if (!summary) {
+        throw new Error(`Payroll run ${payrollRunId} not found`);
+      }
+
+      const { payroll_run, items } = summary;
+      const batchId = payroll_run.batch_id;
+
+      // Update status to processing
+      await PayrollBonusService.updatePayrollRunStatus(payrollRunId, 'processing');
+      emitBulkUpdate(batchId, 'processing', { progress: 0 });
+
+      // 2. Prepare for blockchain transaction
+      // For this implementation, we use a single distribution account defined in env
+      const distributionSecret = process.env.ORGUSD_DISTRIBUTION_SECRET;
+      if (!distributionSecret) {
+        throw new Error('ORGUSD_DISTRIBUTION_SECRET not configured on server');
+      }
+
+      const distributionKeypair = Keypair.fromSecret(distributionSecret);
+      const assetCode = payroll_run.asset_code;
+
+      // Resolve the issuer from the centralized asset registry.
+      // For XLM (native) no issuer is needed; for any stablecoin (USDC,
+      // EURC, ORGUSD, …) the registry provides the correct address.
+      const assetIssuer = assetCode !== 'XLM' ? getAssetIssuer(assetCode) : null;
+
+      // 2a. Preflight balance check before execution for ORGUSD payroll runs.
+      if (assetCode === 'ORGUSD') {
+        if (!assetIssuer) {
+          throw new Error('ORGUSD_ISSUER_PUBLIC not configured on server');
+        }
+
+        const preflightPayments = items.map((item) => ({
+          employeeId: String(item.employee_id),
+          employeeName:
+            `${item.employee_first_name ?? ''} ${item.employee_last_name ?? ''}`.trim() ||
+            item.employee_email ||
+            `Employee #${item.employee_id}`,
+          walletAddress: item.employee_wallet_address || 'N/A',
+          amount: item.amount,
+        }));
+
+        const preflightResult = await BalanceService.preflightCheck(
+          distributionKeypair.publicKey(),
+          assetIssuer,
+          preflightPayments
+        );
+
+        if (!preflightResult.sufficient) {
+          const shortfallReport = {
+            payrollRunId,
+            batchId,
+            organizationId: payroll_run.organization_id,
+            generatedAt: new Date().toISOString(),
+            ...preflightResult,
+          };
+
+          await webhookNotificationService.dispatch(
+            'balance.low',
+            {
+              message: 'Payroll aborted due to insufficient ORGUSD distribution balance.',
+              shortfallReport,
+            },
+            payroll_run.organization_id
+          );
+
+          emitBulkUpdate(batchId, 'failed', {
+            error: 'Insufficient ORGUSD balance. Payroll aborted before execution.',
+            shortfallReport,
+          });
+
+          throw new Error(
+            `Insufficient ORGUSD balance for payroll run ${payrollRunId}. ` +
+              `Required: ${preflightResult.totalRequired}, Available: ${preflightResult.availableBalance}, ` +
+              `Shortfall: ${preflightResult.shortfall}`
+          );
+        }
+      }
+
+      const asset = assetCode === 'XLM' ? Asset.native() : new Asset(assetCode, assetIssuer!);
+
+      // 3. Group items into batches of 100 (Stellar transaction limit)
+      const chunkSize = 100;
+      const itemChunks = [];
+      for (let i = 0; i < items.length; i += chunkSize) {
+        itemChunks.push(items.slice(i, i + chunkSize));
+      }
+
+      let completedCount = 0;
+      const totalItems = items.length;
+
+      for (let i = 0; i < itemChunks.length; i++) {
+        const chunk = itemChunks[i]!;
+        logger.info(`Processing chunk ${i + 1}/${itemChunks.length} for run ${payrollRunId}`);
 
         try {
-            // 1. Get payroll run and items
-            const summary = await PayrollBonusService.getPayrollRunSummary(payrollRunId);
-            if (!summary) {
-                throw new Error(`Payroll run ${payrollRunId} not found`);
-            }
-
-            const { payroll_run, items } = summary;
-            const batchId = payroll_run.batch_id;
-
-            // Update status to processing
-            await PayrollBonusService.updatePayrollRunStatus(payrollRunId, 'processing');
-            emitBulkUpdate(batchId, 'processing', { progress: 0 });
-
-            // 2. Prepare for blockchain transaction
-            // For this implementation, we use a single distribution account defined in env
-            const distributionSecret = process.env.ORGUSD_DISTRIBUTION_SECRET;
-            if (!distributionSecret) {
-                throw new Error('ORGUSD_DISTRIBUTION_SECRET not configured on server');
-            }
-
-            const distributionKeypair = Keypair.fromSecret(distributionSecret);
-            const assetCode = payroll_run.asset_code;
-
-            // Resolve the issuer from the centralized asset registry.
-            // For XLM (native) no issuer is needed; for any stablecoin (USDC,
-            // EURC, ORGUSD, …) the registry provides the correct address.
-            const assetIssuer = assetCode !== 'XLM' ? getAssetIssuer(assetCode) : null;
-
-            // 2a. Preflight balance check before execution for ORGUSD payroll runs.
-            if (assetCode === 'ORGUSD') {
-                if (!assetIssuer) {
-                    throw new Error('ORGUSD_ISSUER_PUBLIC not configured on server');
-                }
-
-                const preflightPayments = items.map((item) => ({
-                    employeeId: String(item.employee_id),
-                    employeeName:
-                        `${item.employee_first_name ?? ''} ${item.employee_last_name ?? ''}`.trim() ||
-                        item.employee_email ||
-                        `Employee #${item.employee_id}`,
-                    walletAddress: item.employee_wallet_address || 'N/A',
-                    amount: item.amount,
-                }));
-
-                const preflightResult = await BalanceService.preflightCheck(
-                    distributionKeypair.publicKey(),
-                    assetIssuer,
-                    preflightPayments
-                );
-
-                if (!preflightResult.sufficient) {
-                    const shortfallReport = {
-                        payrollRunId,
-                        batchId,
-                        organizationId: payroll_run.organization_id,
-                        generatedAt: new Date().toISOString(),
-                        ...preflightResult,
-                    };
-
-                    await webhookNotificationService.dispatch(
-                        'balance.low',
-                        {
-                            message: 'Payroll aborted due to insufficient ORGUSD distribution balance.',
-                            shortfallReport,
-                        },
-                        payroll_run.organization_id
-                    );
-
-                    emitBulkUpdate(batchId, 'failed', {
-                        error: 'Insufficient ORGUSD balance. Payroll aborted before execution.',
-                        shortfallReport,
-                    });
-
-                    throw new Error(
-                        `Insufficient ORGUSD balance for payroll run ${payrollRunId}. ` +
-                            `Required: ${preflightResult.totalRequired}, Available: ${preflightResult.availableBalance}, ` +
-                            `Shortfall: ${preflightResult.shortfall}`
-                    );
-                }
-            }
-
-            const asset = assetCode === 'XLM'
-                ? Asset.native()
-                : new Asset(assetCode, assetIssuer!);
-
-            // 3. Group items into batches of 100 (Stellar transaction limit)
-            const chunkSize = 100;
-            const itemChunks = [];
-            for (let i = 0; i < items.length; i += chunkSize) {
-                itemChunks.push(items.slice(i, i + chunkSize));
-            }
+          // Build operations for this chunk
+          const operations = [];
 
             let completedCount = 0;
             const totalItems = items.length;
@@ -263,37 +272,147 @@ export const payrollWorker = new Worker<PayrollJobData>(
                 }
             }
 
-            // 4. Wrap up
-            await PayrollBonusService.updatePayrollRunStatus(payrollRunId, 'completed');
-            emitBulkUpdate(batchId, 'completed', { progress: 100, completedCount: totalItems });
-            logger.info(`Successfully completed payroll run ${payrollRunId}`);
+            // Calculate and deduct taxes
+            const taxResult = await taxService.calculateDeductions(
+              payroll_run.organization_id,
+              parseFloat(item.amount)
+            );
 
-        } catch (error: any) {
-            logger.error(`Critical failure in payroll worker for run ${payrollRunId}`, error);
+            // If there are deductions, we record them and use the net amount for payment
+            if (taxResult.total_tax > 0) {
+              logger.info(
+                `Applying tax deductions for employee ${item.employee_id}: Gross ${taxResult.gross_amount}, Tax ${taxResult.total_tax}, Net ${taxResult.net_amount}`
+              );
 
-            // Update run status to failed if not already completed
-            await PayrollBonusService.updatePayrollRunStatus(payrollRunId, 'failed');
-
-            const summary = await PayrollBonusService.getPayrollRunSummary(payrollRunId);
-            if (summary) {
-                emitBulkUpdate(summary.payroll_run.batch_id, 'failed', {
-                    error: error.message
-                });
+              // Record each deduction for reporting
+              for (const deduction of taxResult.deductions) {
+                await taxService.recordDeduction(
+                  payroll_run.organization_id,
+                  item.employee_id,
+                  null, // transactionId will be updated later if needed
+                  deduction.rule_id,
+                  taxResult.gross_amount,
+                  deduction.deducted_amount,
+                  taxResult.net_amount,
+                  payroll_run.period_start.toISOString(),
+                  payroll_run.period_end.toISOString()
+                );
+              }
             }
 
-            throw error; // Rethrow so BullMQ knows it failed
+            operations.push(
+              Operation.payment({
+                destination: item.employee_wallet_address,
+                asset: asset,
+                amount: taxResult.net_amount.toString(),
+              })
+            );
+          }
+
+          // Build and submit transaction
+          const server = StellarService.getServer();
+          const networkPassphrase = StellarService.getNetworkPassphrase();
+          const account = await server.loadAccount(distributionKeypair.publicKey());
+
+          const txBuilder = new TransactionBuilder(account, {
+            fee: (1000 * operations.length).toString(), // Adaptive fee for batch size
+            networkPassphrase,
+          });
+
+          operations.forEach((op) => txBuilder.addOperation(op));
+          txBuilder.setTimeout(180); // Longer timeout for large batches
+
+          const tx = txBuilder.build();
+          tx.sign(distributionKeypair);
+
+          const result = await StellarService.submitTransaction(tx);
+          logger.info(`Chunk ${i + 1} submitted successfully. Tx Hash: ${result.hash}`);
+
+          // Update database for items in this chunk and log audit entries
+          for (const item of chunk) {
+            await PayrollBonusService.updateItemStatus(item.id, 'completed', result.hash);
+
+            // Log successful transaction with item type
+            await PayrollAuditService.logTransactionSucceeded(
+              payroll_run.organization_id,
+              payrollRunId,
+              item.id,
+              item.employee_id,
+              result.hash,
+              result.ledger || 0,
+              item.amount,
+              assetCode,
+              item.item_type
+            );
+
+            completedCount++;
+          }
+
+          // Emit progress
+          const progress = Math.round((completedCount / totalItems) * 100);
+          emitBulkUpdate(batchId, 'processing', {
+            progress,
+            completedCount,
+            totalItems,
+            lastTxHash: result.hash,
+          });
+        } catch (chunkError: any) {
+          logger.error(`Failed to process chunk ${i + 1} for run ${payrollRunId}`, chunkError);
+
+          // Mark items in this chunk as failed and log audit entries
+          for (const item of chunk) {
+            await PayrollBonusService.updateItemStatus(item.id, 'failed');
+
+            // Log failed transaction with item type
+            await PayrollAuditService.logTransactionFailed(
+              payroll_run.organization_id,
+              payrollRunId,
+              item.id,
+              item.employee_id,
+              'N/A',
+              chunkError.message || 'Unknown error',
+              item.amount,
+              assetCode,
+              item.item_type
+            );
+          }
+
+          // We continue with other chunks instead of failing the whole job immediately,
+          // but we will mark the run as failed at the end if any chunk fails.
+          throw chunkError; // BullMQ will retry based on config
         }
-    },
-    {
-        connection: redisConnection,
-        concurrency: 1, // Process one payroll run at a time to prevent sequence number issues
+      }
+
+      // 4. Wrap up
+      await PayrollBonusService.updatePayrollRunStatus(payrollRunId, 'completed');
+      emitBulkUpdate(batchId, 'completed', { progress: 100, completedCount: totalItems });
+      logger.info(`Successfully completed payroll run ${payrollRunId}`);
+    } catch (error: any) {
+      logger.error(`Critical failure in payroll worker for run ${payrollRunId}`, error);
+
+      // Update run status to failed if not already completed
+      await PayrollBonusService.updatePayrollRunStatus(payrollRunId, 'failed');
+
+      const summary = await PayrollBonusService.getPayrollRunSummary(payrollRunId);
+      if (summary) {
+        emitBulkUpdate(summary.payroll_run.batch_id, 'failed', {
+          error: error.message,
+        });
+      }
+
+      throw error; // Rethrow so BullMQ knows it failed
     }
+  },
+  {
+    connection: redisConnection,
+    concurrency: 1, // Process one payroll run at a time to prevent sequence number issues
+  }
 );
 
 payrollWorker.on('completed', (job) => {
-    logger.info(`Payroll job ${job.id} completed successfully`);
+  logger.info(`Payroll job ${job.id} completed successfully`);
 });
 
 payrollWorker.on('failed', (job, err) => {
-    logger.error(`Payroll job ${job?.id} failed with error: ${err.message}`);
+  logger.error(`Payroll job ${job?.id} failed with error: ${err.message}`);
 });

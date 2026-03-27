@@ -14,7 +14,9 @@ const pool = new Pool({ connectionString: config.DATABASE_URL });
 
 async function organizationPublicKeyForUser(organizationId: number | null): Promise<string | null> {
   if (organizationId == null) return null;
-  const r = await pool.query('SELECT public_key FROM organizations WHERE id = $1', [organizationId]);
+  const r = await pool.query('SELECT public_key FROM organizations WHERE id = $1', [
+    organizationId,
+  ]);
   return r.rows[0]?.public_key ?? null;
 }
 
@@ -34,7 +36,7 @@ export class ExportController {
 
       // Fetch item_type and description from database if available
       const payrollItem = await PayrollBonusService.getPayrollItemByTxHash(txHash as string);
-      
+
       // Enrich transaction with item type and description
       const enrichedTransaction = {
         ...transaction,
@@ -91,7 +93,7 @@ export class ExportController {
       );
       res.setHeader('Content-Disposition', `attachment; filename="payroll-batch-${batchId}.xlsx"`);
 
-      await ExportService.generatePayrollExcel((batchId as string), batchData.data, res);
+      await ExportService.generatePayrollExcel(batchId as string, batchData.data, res);
     } catch (error) {
       logger.error('Failed to generate Excel report', { error });
 
