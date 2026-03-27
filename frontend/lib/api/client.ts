@@ -126,8 +126,6 @@ function getErrorMessage(statusText: string, data: unknown): string {
   return `API Error: ${statusText}`;
 }
 
-// ... (imports)
-
 export async function apiCall<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
@@ -138,12 +136,12 @@ export async function apiCall<T = unknown>(
   const shouldQueue = shouldQueueRequest(options);
 
   if (shouldQueue && typeof navigator !== 'undefined' && navigator.onLine === false) {
-    // @ts-ignore
+    // @ts-expect-error - Bypassing type check for offline action queueing
     const action = queueOfflineAction(endpoint, options);
     throw new OfflineActionQueuedError(
       'You are offline. This action has been queued and will sync when the connection returns.',
       endpoint,
-      // @ts-ignore
+      // @ts-expect-error - action.id may not be correctly typed in current SDK version
       action.id
     );
   }
@@ -174,12 +172,12 @@ export async function apiCall<T = unknown>(
       lastError = normalizeError(error);
 
       if (shouldQueue && isLikelyOfflineError(lastError)) {
-        // @ts-ignore
+        // @ts-expect-error - Bypassing type check for offline action queueing
         const action = queueOfflineAction(endpoint, options);
         throw new OfflineActionQueuedError(
           'The request was queued because the network is unavailable.',
           endpoint,
-          // @ts-ignore
+          // @ts-expect-error - action.id may not be correctly typed
           action.id
         );
       }
