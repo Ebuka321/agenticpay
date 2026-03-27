@@ -126,6 +126,11 @@ export const payrollWorker = new Worker<PayrollJobData>(
           // Build operations for this chunk
           const operations = [];
 
+<<<<<<< report-builder
+          for (const item of chunk) {
+            if (!item.employee_wallet_address) {
+              throw new Error(`Employee ${item.employee_id} has no wallet address`);
+=======
             let completedCount = 0;
             const totalItems = items.length;
 
@@ -270,6 +275,7 @@ export const payrollWorker = new Worker<PayrollJobData>(
                     // but we will mark the run as failed at the end if any chunk fails.
                     throw chunkError; // BullMQ will retry based on config
                 }
+>>>>>>> main
             }
 
             // Calculate and deduct taxes
