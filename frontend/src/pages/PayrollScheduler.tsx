@@ -108,7 +108,16 @@ function computeNextRunDate(config: SchedulingConfig, from: Date = new Date()): 
 
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A';
-  const date = new Date(dateString);
+
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+  const date = dateOnlyMatch
+    ? new Date(
+        Number.parseInt(dateOnlyMatch[1], 10),
+        Number.parseInt(dateOnlyMatch[2], 10) - 1,
+        Number.parseInt(dateOnlyMatch[3], 10)
+      )
+    : new Date(dateString);
+
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-US', {
     month: 'short',
@@ -135,6 +144,13 @@ const initialFormState: PayrollFormState = {
   frequency: 'monthly',
   startDate: '',
   memo: '',
+};
+
+const formatLocalDateInput = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 export default function PayrollScheduler() {
@@ -303,7 +319,7 @@ export default function PayrollScheduler() {
         id: Math.random().toString(36).substr(2, 9),
         employeeName: formData.employeeName,
         amount: formData.amount,
-        dateScheduled: formData.startDate || new Date().toISOString().split('T')[0],
+        dateScheduled: formData.startDate || formatLocalDateInput(new Date()),
         claimantPublicKey: mockRecipientPublicKey,
         status: 'Pending Claim',
       };

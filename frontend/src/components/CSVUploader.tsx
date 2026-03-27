@@ -12,12 +12,14 @@ interface CSVUploaderProps {
   requiredColumns: string[];
   onDataParsed: (data: CSVRow[]) => void;
   validators?: Record<string, (value: string) => string | null>;
+  strictHeaderValidation?: boolean;
 }
 
 export const CSVUploader: React.FC<CSVUploaderProps> = ({
   requiredColumns,
   onDataParsed,
   validators = {},
+  strictHeaderValidation = true,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [parsedData, setParsedData] = useState<CSVRow[]>([]);
@@ -31,7 +33,31 @@ export const CSVUploader: React.FC<CSVUploaderProps> = ({
     const headers = lines[0].split(',').map((h) => h.trim());
 
     // Validate headers
-    const missingColumns = requiredColumns.filter((col) => !headers.includes(col));
+    const normalizedHeaders = headers.map((h) => h.toLowerCase());
+    const normalizedRequired = requiredColumns.map((col) => col.toLowerCase());
+
+    const missingColumns = requiredColumns.filter(
+      (col) => !normalizedHeaders.includes(col.toLowerCase())
+    );
+
+    const unknownColumns = headers.filter(
+      (header) => !normalizedRequired.includes(header.toLowerCase())
+    );
+
+    const duplicateColumns = headers.filter(
+      (header, index) =>
+        normalizedHeaders.indexOf(header.toLowerCase()) !== index && header.trim().length > 0
+    );
+
+    if (strictHeaderValidation && unknownColumns.length > 0) {
+      alert(`Unexpected columns: ${unknownColumns.join(', ')}`);
+      return [];
+    }
+
+    if (duplicateColumns.length > 0) {
+      alert(`Duplicate columns found: ${[...new Set(duplicateColumns)].join(', ')}`);
+      return [];
+    }
     if (missingColumns.length > 0) {
       alert(`Missing required columns: ${missingColumns.join(', ')}`);
       return [];
@@ -45,7 +71,7 @@ export const CSVUploader: React.FC<CSVUploaderProps> = ({
       const errors: string[] = [];
 
       headers.forEach((header, idx) => {
-        row[header] = values[idx] || '';
+        row[header.toLowerCase()] = values[idx] || '';
       });
 
       // Validate each field
