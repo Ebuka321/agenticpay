@@ -1,20 +1,25 @@
+import { Button, Card, Heading, Input, Select, Text } from '@stellar/design-system';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+// Type assertion for Stellar components to work around library typing issues
+const InputComponent = Input as unknown as React.FC<Record<string, unknown>>;
+const SelectComponent = Select as unknown as React.FC<Record<string, unknown>>;
+
 import { AutosaveIndicator } from '../components/AutosaveIndicator';
-import { useAutosave } from '../hooks/useAutosave';
-import { useTransactionSimulation } from '../hooks/useTransactionSimulation';
+import { BulkPaymentStatusTracker } from '../components/BulkPaymentStatusTracker';
+import { CountdownTimer } from '../components/CountdownTimer';
+import { SchedulingWizard } from '../components/SchedulingWizard';
 import { TransactionSimulationPanel } from '../components/TransactionSimulationPanel';
+import { useAutosave } from '../hooks/useAutosave';
 import { useNotification } from '../hooks/useNotification';
 import { useSocket } from '../hooks/useSocket';
+import { useTransactionSimulation } from '../hooks/useTransactionSimulation';
 import { createClaimableBalanceTransaction, generateWallet } from '../services/stellar';
-import { useTranslation } from 'react-i18next';
-import { Card, Heading, Text, Button, Input, Select } from '@stellar/design-system';
-import { SchedulingWizard } from '../components/SchedulingWizard';
-import { CountdownTimer } from '../components/CountdownTimer';
-import { BulkPaymentStatusTracker } from '../components/BulkPaymentStatusTracker';
 
 import { ContractErrorPanel } from '../components/ContractErrorPanel';
-import { parseContractError, type ContractErrorDetail } from '../utils/contractErrorParser';
 import { HelpLink } from '../components/HelpLink';
+import { parseContractError, type ContractErrorDetail } from '../utils/contractErrorParser';
 
 interface PayrollFormState {
   employeeName: string;
@@ -474,7 +479,7 @@ export default function PayrollScheduler() {
               className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 card glass noise"
             >
               <div className="md:col-span-2">
-                <Input
+                <InputComponent
                   id="employeeName"
                   fieldSize="md"
                   label={t('payroll.employeeName', 'Employee Name')}
@@ -486,7 +491,7 @@ export default function PayrollScheduler() {
               </div>
 
               <div>
-                <Input
+                <InputComponent
                   id="amount"
                   fieldSize="md"
                   label={t('payroll.amountLabel', 'Amount (USD equivalent)')}
@@ -498,7 +503,7 @@ export default function PayrollScheduler() {
               </div>
 
               <div>
-                <Select
+                <SelectComponent
                   id="frequency"
                   fieldSize="md"
                   label={t('payroll.distributionFrequency', 'Distribution Frequency')}
@@ -508,11 +513,11 @@ export default function PayrollScheduler() {
                 >
                   <option value="weekly">{t('payroll.frequencyWeekly', 'Weekly')}</option>
                   <option value="monthly">{t('payroll.frequencyMonthly', 'Monthly')}</option>
-                </Select>
+                </SelectComponent>
               </div>
 
               <div className="md:col-span-2">
-                <Input
+                <InputComponent
                   id="startDate"
                   fieldSize="md"
                   label={t('payroll.commencementDate', 'Commencement Date')}

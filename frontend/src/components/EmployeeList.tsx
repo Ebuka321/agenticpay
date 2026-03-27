@@ -4,6 +4,7 @@ import { AvatarUpload } from './AvatarUpload';
 import { CSVUploader } from './CSVUploader';
 import type { CSVRow } from './CSVUploader';
 import { Pencil, Trash2 } from 'lucide-react';
+import { EmployeeRemovalConfirmModal } from './EmployeeRemovalConfirmModal';
 
 interface Employee {
   id: string;
@@ -38,7 +39,10 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   const [showEditModal, setShowEditModal] = useState<{ open: boolean; employee?: Employee }>({
     open: false,
   });
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ open: boolean; id?: string }>({
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
+    open: boolean;
+    employee?: Employee;
+  }>({
     open: false,
   });
   const [showAvatarModal, setShowAvatarModal] = useState<{
@@ -136,9 +140,9 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   };
 
   // Delete Confirm
-  const handleDeleteConfirm = () => {
-    if (showDeleteConfirm.id && onRemoveEmployee) {
-      onRemoveEmployee(showDeleteConfirm.id);
+  const handleDeleteConfirm = (employeeId: string) => {
+    if (onRemoveEmployee) {
+      onRemoveEmployee(employeeId);
     }
     setShowDeleteConfirm({ open: false });
   };
@@ -264,7 +268,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   <button
                     className="text-red-500 hover:text-red-700"
                     title="Remove"
-                    onClick={() => setShowDeleteConfirm({ open: true, id: employee.id })}
+                    onClick={() => setShowDeleteConfirm({ open: true, employee })}
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -412,29 +416,14 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
           </div>
         </div>
       )}
-      {/* Delete Confirm */}
-      {showDeleteConfirm.open && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Confirm Removal</h2>
-            <p className="mb-4">Are you sure you want to remove this employee?</p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowDeleteConfirm({ open: false })}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="px-4 py-2 bg-red-500 text-white rounded"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Employee Removal Confirmation Modal */}
+      <EmployeeRemovalConfirmModal
+        isOpen={showDeleteConfirm.open}
+        employeeName={showDeleteConfirm.employee?.name || ''}
+        employeeId={showDeleteConfirm.employee?.id || ''}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteConfirm({ open: false })}
+      />
 
       {showAvatarModal.open && showAvatarModal.employee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

@@ -5,6 +5,7 @@ import { Button, Card } from '@stellar/design-system';
 import {
   CalendarRange,
   Check,
+  ExternalLink,
   FileDown,
   GripVertical,
   LayoutGrid,
@@ -12,6 +13,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useNotification } from '../hooks/useNotification';
+import { getTxExplorerUrl } from '../utils/stellarExpert';
 import {
   PAYROLL_EXPORT_COLUMNS,
   PAYROLL_EXPORT_FORMATS,
@@ -623,9 +625,20 @@ export default function CustomReportBuilder() {
                                       >
                                         {value}
                                       </span>
+                                    ) : isHash && row.txHash ? (
+                                      <a
+                                        href={getTxExplorerUrl(row.txHash)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title={row.txHash}
+                                        className="inline-flex items-center gap-1 font-mono text-[12px] text-(--accent) hover:underline"
+                                      >
+                                        {value}
+                                        <ExternalLink className="w-3 h-3 shrink-0" />
+                                      </a>
                                     ) : (
                                       <span
-                                        className={`block ${isHash || isTimestamp ? 'font-mono text-[12px]' : ''} ${column.id === 'amount' ? 'font-semibold text-(--accent)' : ''}`}
+                                        className={`block ${isTimestamp ? 'font-mono text-[12px]' : ''} ${column.id === 'amount' ? 'font-semibold text-(--accent)' : ''}`}
                                       >
                                         {value}
                                       </span>

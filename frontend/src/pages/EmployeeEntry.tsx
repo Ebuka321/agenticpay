@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Icon, Button, Card, Input, Select, Alert } from '@stellar/design-system';
-import { EmployeeList } from '../components/EmployeeList';
-import { AutosaveIndicator } from '../components/AutosaveIndicator';
-import { WalletQRCode } from '../components/WalletQRCode';
-import { useAutosave } from '../hooks/useAutosave';
-import { generateWallet } from '../services/stellar';
+import { Alert, Button, Card, Icon, Input, Select } from '@stellar/design-system';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNotification } from '../hooks/useNotification';
+
+// Type assertion for Stellar components to work around library typing issues
+const AlertComponent = Alert as unknown as React.FC<Record<string, unknown>>;
+const InputComponent = Input as unknown as React.FC<Record<string, unknown>>;
+const SelectComponent = Select as unknown as React.FC<Record<string, unknown>>;
+
+import { AutosaveIndicator } from '../components/AutosaveIndicator';
+import { EmployeeList } from '../components/EmployeeList';
 import { HelpLink } from '../components/HelpLink';
+import { WalletQRCode } from '../components/WalletQRCode';
 import { SUPPORTED_ASSETS } from '../config/assets';
+import { useAutosave } from '../hooks/useAutosave';
+import { useNotification } from '../hooks/useNotification';
+import { generateWallet } from '../services/stellar';
 
 interface EmployeeFormState {
   fullName: string;
@@ -221,9 +227,9 @@ export default function EmployeeEntry() {
 
         {notification && !notification.walletAddress && (
           <div style={{ marginBottom: '1.5rem' }}>
-            <Alert variant="success" title="Success" placement="inline">
+            <AlertComponent variant="success" title="Success" placement="inline">
               {notification.message}
-            </Alert>
+            </AlertComponent>
           </div>
         )}
 
@@ -232,7 +238,7 @@ export default function EmployeeEntry() {
             onSubmit={handleSubmit}
             style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
           >
-            <Input
+            <InputComponent
               id="fullName"
               fieldSize="md"
               label="Full Name"
@@ -242,7 +248,7 @@ export default function EmployeeEntry() {
               placeholder="Jane Smith"
               required
             />
-            <Input
+            <InputComponent
               id="walletAddress"
               fieldSize="md"
               label="Stellar Wallet Address (Optional)"
@@ -253,20 +259,22 @@ export default function EmployeeEntry() {
               placeholder="Leave blank to generate a wallet"
             />
             <div className="flex items-center gap-2">
-              <Select
+              <SelectComponent
                 id="currency"
                 fieldSize="md"
                 label="Preferred Payout Asset"
                 note="The employee will receive salary in this asset. A trustline must exist in their wallet."
                 value={formData.currency}
-                onChange={(e) => handleSelectChange('currency', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  handleSelectChange('currency', e.target.value)
+                }
               >
                 {SUPPORTED_ASSETS.map((asset) => (
                   <option key={asset.code} value={asset.code}>
                     {asset.label}
                   </option>
                 ))}
-              </Select>
+              </SelectComponent>
               <div className="pt-6">
                 <HelpLink topic="trustline" variant="icon-text" size="sm" />
               </div>

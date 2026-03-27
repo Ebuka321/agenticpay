@@ -22,6 +22,9 @@ pub struct RecipientShare {
 
 pub const TOTAL_BASIS_POINTS: u32 = 10000; // 100%
 
+const PERSISTENT_TTL_THRESHOLD: u32 = 20_000;
+const PERSISTENT_TTL_EXTEND_TO: u32 = 120_000;
+
 #[contract]
 pub struct RevenueSplitContract;
 

@@ -206,20 +206,20 @@ impl VestingContract {
 
     pub fn get_vested_amount(e: Env) -> i128 {
         let config: VestingConfig = e.storage().persistent().get(&DataKey::Config).expect("Config entry unavailable; restore and retry");
-        Self::bump_config_ttl(&e);
+        // Reading state should not modify TTL; extend only on write
         Self::calc_vested(&e, &config)
     }
     
     pub fn get_claimable_amount(e: Env) -> i128 {
         let config: VestingConfig = e.storage().persistent().get(&DataKey::Config).expect("Config entry unavailable; restore and retry");
-        Self::bump_config_ttl(&e);
+        // Reading state should not modify TTL; extend only on write
         let vested = Self::calc_vested(&e, &config);
         vested - config.claimed_amount
     }
     
     pub fn get_config(e: Env) -> VestingConfig {
         let config: VestingConfig = e.storage().persistent().get(&DataKey::Config).expect("Config entry unavailable; restore and retry");
-        Self::bump_config_ttl(&e);
+        // Reading state should not modify TTL; extend only on write
         config
     }
 
