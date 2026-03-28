@@ -12,16 +12,15 @@ const chainConfig = {
   tickerName: "Stellar Lumens",
 };
 
-const privateKeyProvider = new EthereumPrivateKeyProvider({
-  config: { chainConfig },
-});
+// Cast to any to satisfy TypeScript
+const privateKeyProvider = new EthereumPrivateKeyProvider({ config: { chainConfig } }) as any;
 
 // Get client ID from environment or use a placeholder for development
 const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID;
 
 if (!clientId) {
   console.warn(
-    'NEXT_PUBLIC_WEB3AUTH_CLIENT_ID is not set. Web3Auth will not work until you add your client ID to .env.local'
+    "NEXT_PUBLIC_WEB3AUTH_CLIENT_ID is not set. Web3Auth will not work until you add your client ID to .env.local"
   );
 }
 
@@ -30,13 +29,10 @@ export const web3auth: IWeb3AuthModal | null = clientId
   ? new Web3Auth({
       clientId,
       web3AuthNetwork: "testnet",
-      chainConfig,
-      privateKeyProvider,
+      privateKeyProvider, // keep here
       uiConfig: {
         appName: "AgenticPay",
-        theme: {
-          primary: "#0052FF",
-        },
+        theme: { primary: "#0052FF" },
         mode: "light",
         loginMethodsOrder: ["google", "twitter", "email_passwordless"],
       },
