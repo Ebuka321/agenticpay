@@ -5,6 +5,7 @@ import { OfflineActionQueuedError } from '../offline';
 describe('apiCall', () => {
   const originalFetch = global.fetch;
   const originalNavigator = global.navigator;
+
   const localStorageMock = (() => {
     let store: Record<string, string> = {};
     return {
@@ -96,12 +97,17 @@ describe('apiCall', () => {
   });
 
   it('does not retry aborted requests', async () => {
+    // Use real timers to avoid timeout
+    vi.useRealTimers();
+
     const abortError = new DOMException('The operation was aborted.', 'AbortError');
     const fetchMock = vi.fn().mockRejectedValue(abortError);
 
     global.fetch = fetchMock as typeof fetch;
 
-    await expect(apiCall('/health')).rejects.toMatchObject({
+    await expect(
+      apiCall('/health', {}, { maxRetries: 0 }) // prevent retry delays
+    ).rejects.toMatchObject({
       name: 'AbortError',
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
