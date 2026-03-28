@@ -188,7 +188,7 @@ const EmployeePortal: React.FC = () => {
   const currencies = getSupportedCurrencies();
 
   // Calculate stats
-  const totalReceived = balance?.orgUsd || 0;
+  const totalReceived = balance?.orgUsd?.value || 0;
   const totalTransactions = transactions.length;
   const pendingCount = transactions.filter((t) => t.status === 'pending').length;
   const lastPayment = transactions.find((t) => t.status === 'completed');
@@ -229,7 +229,7 @@ const EmployeePortal: React.FC = () => {
             ) : (
               <>
                 <span className={styles.balanceAmount}>
-                  {formatCurrency(balance?.orgUsd || 0, 'USD')}
+                  {formatCurrency(balance?.orgUsd?.value || 0, 'USD')}
                 </span>
                 <span className={styles.localAmount}>
                   ≈ {formatCurrency(balance?.localAmount || 0, selectedCurrency)}

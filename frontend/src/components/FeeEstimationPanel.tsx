@@ -189,7 +189,7 @@ export const FeeEstimationPanel: React.FC = () => {
                   {feeRecommendation.recommendedFee.toLocaleString()} stroops
                   <span className={styles.statSub}>
                     {t('feeEstimation.feeInXlm', {
-                      amount: feeRecommendation.recommendedFeeXLM,
+                      amount: feeRecommendation.recommendedFeeXLM.value,
                     })}
                   </span>
                 </span>
@@ -270,7 +270,7 @@ export const FeeEstimationPanel: React.FC = () => {
                     <span className={styles.statValue}>
                       {batchResult.feePerTransaction.toLocaleString()} stroops
                       <span className={styles.statSub}>
-                        ({batchResult.feePerTransactionXLM} XLM)
+                        ({batchResult.feePerTransactionXLM.value} XLM)
                       </span>
                     </span>
                   </div>
@@ -278,7 +278,9 @@ export const FeeEstimationPanel: React.FC = () => {
                     <span className={styles.statLabel}>{t('feeEstimation.batchTotalBudget')}</span>
                     <span className={styles.statValue}>
                       {batchResult.totalBudget.toLocaleString()} stroops
-                      <span className={styles.statSub}>({batchResult.totalBudgetXLM} XLM)</span>
+                      <span className={styles.statSub}>
+                        ({batchResult.totalBudgetXLM.value} XLM)
+                      </span>
                     </span>
                   </div>
                   <div className={styles.statRow}>

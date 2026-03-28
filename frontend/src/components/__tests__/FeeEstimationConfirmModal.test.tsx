@@ -33,9 +33,9 @@ const mockFeeRecommendation: FeeRecommendation = {
   shouldBumpFee: false,
   ledgerCapacityUsage: 0.5,
   lastLedger: 12345,
-  recommendedFeeXLM: '0.0001000',
-  maxFeeXLM: '0.0005000',
-  baseFeeXLM: '0.0000100',
+  recommendedFeeXLM: { asset: { code: 'XLM' }, value: '0.0001000' },
+  maxFeeXLM: { asset: { code: 'XLM' }, value: '0.0001500' },
+  baseFeeXLM: { asset: { code: 'XLM' }, value: '0.0000100' },
 };
 
 const createQueryClient = () =>
@@ -418,8 +418,8 @@ describe('FeeEstimationConfirmModal', () => {
       ...mockFeeRecommendation,
       baseFee: 1,
       recommendedFee: 10,
-      baseFeeXLM: '0.0000001',
-      recommendedFeeXLM: '0.0000010',
+      baseFeeXLM: { asset: { code: 'XLM' }, value: '0.0000001' },
+      recommendedFeeXLM: { asset: { code: 'XLM' }, value: '0.0000010' },
     };
     vi.spyOn(feeEstimationHook, 'useFeeEstimation').mockReturnValue({
       feeRecommendation: smallFee,

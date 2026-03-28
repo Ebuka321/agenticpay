@@ -37,7 +37,7 @@ export class BalanceController {
    */
   static async checkBalance(req: Request, res: Response) {
     try {
-      const { accountId } = req.params;
+      const accountId = req.params.accountId as string;
       const assetCode = (req.query.assetCode as string | undefined) ?? 'ORGUSD';
       const explicitIssuer = req.query.assetIssuer as string | undefined;
 

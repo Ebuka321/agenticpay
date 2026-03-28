@@ -357,14 +357,14 @@ export const FeeEstimationConfirmModal: React.FC<FeeEstimationConfirmModalProps>
                   <FeeRow
                     icon={<DollarSign size={16} />}
                     label={t('feeEstimation.confirmModal.baseFee', 'Base Fee')}
-                    value={`${stroopsToXLM(feeRecommendation.baseFee)} XLM`}
+                    value={`${stroopsToXLM(feeRecommendation.baseFee).value} XLM`}
                     subtext={`${feeRecommendation.baseFee} stroops`}
                   />
 
                   <FeeRow
                     icon={<TrendingUp size={16} />}
                     label={t('feeEstimation.confirmModal.recommendedFee', 'Recommended Fee')}
-                    value={`${stroopsToXLM(feeRecommendation.recommendedFee)} XLM`}
+                    value={`${stroopsToXLM(feeRecommendation.recommendedFee).value} XLM`}
                     subtext={`${feeRecommendation.recommendedFee} stroops per transaction`}
                   />
 
@@ -403,7 +403,7 @@ export const FeeEstimationConfirmModal: React.FC<FeeEstimationConfirmModalProps>
                     <p className={styles.estimateLabel}>
                       {t('feeEstimation.confirmModal.totalFee', 'Total Fee')}
                     </p>
-                    <p className={styles.estimateValue}>{batchEstimate.totalBudgetXLM} XLM</p>
+                    <p className={styles.estimateValue}>{batchEstimate.totalBudgetXLM.value} XLM</p>
                     <p className={styles.estimateSubtext}>({batchEstimate.totalBudget} stroops)</p>
                   </div>
 
@@ -411,7 +411,7 @@ export const FeeEstimationConfirmModal: React.FC<FeeEstimationConfirmModalProps>
                     <p className={styles.fineText}>
                       {t('feeEstimation.confirmModal.feePerTx', 'Fee per transaction')}:{' '}
                       <span className={styles.fineHighlight}>
-                        {batchEstimate.feePerTransactionXLM} XLM
+                        {batchEstimate.feePerTransactionXLM.value} XLM
                       </span>
                     </p>
                   </div>
