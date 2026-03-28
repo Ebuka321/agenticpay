@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWallet } from './useWallet';
 import { useNotification } from './useNotification';
 import { simulateTransaction } from '../services/transactionSimulation';
+import { appendPartialSigningHint } from '../utils/signingErrors';
 
 /**
  * Convenience hook for signing Stellar transactions via the connected wallet.
@@ -38,7 +39,8 @@ export function useWalletSigning() {
       const signedXdr = await signTransaction(xdr);
       return signedXdr;
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Signing failed';
+      const raw = e instanceof Error ? e.message : 'Signing failed';
+      const message = appendPartialSigningHint(raw);
       setError(message);
       notifyError('Signing failed', message);
       throw e;

@@ -232,6 +232,12 @@ JWT_SECRET=your_jwt_secret
 
 ### Development
 
+**Web app (`frontend/`):**
+
+- **Employer dashboard** — Sidebar layout and native XLM balance live under [`/employer`](http://localhost:5173/employer) (redirects to payroll). Set optional `VITE_ORG_DISPLAY_NAME` in `.env`.
+- **Theme** — Light/dark preference is stored in `localStorage` under the key `payd-theme` and synced across browser tabs.
+- **Issuer multisig** — Configured asset issuers (`VITE_*_ISSUER`) are checked against Horizon using the wallet’s network; payroll and cross-asset flows show a warning when multisig is required.
+
 Start the development server:
 
 ```bash

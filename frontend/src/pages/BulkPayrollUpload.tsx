@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StrKey } from '@stellar/stellar-sdk';
 import { CSVUploader, CSVRow } from '../components/CSVUploader';
 import { Button, Card } from '@stellar/design-system';
+import { IssuerMultisigBanner } from '../components/IssuerMultisigBanner';
 
 const REQUIRED_COLUMNS = ['name', 'wallet_address', 'amount', 'currency'];
 
@@ -77,6 +78,7 @@ export default function BulkPayrollUpload() {
           Upload a CSV file to process multiple payroll payments at once. Required columns:{' '}
           <code className="bg-gray-100 px-1 rounded text-sm">{REQUIRED_COLUMNS.join(', ')}</code>
         </p>
+        <IssuerMultisigBanner />
       </div>
 
       <Card>

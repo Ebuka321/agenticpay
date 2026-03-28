@@ -1,10 +1,11 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Home from './pages/Home';
 import Debugger from './pages/Debugger';
 import PayrollScheduler from './pages/PayrollScheduler';
 import EmployeeEntry from './pages/EmployeeEntry';
 import AppLayout from './components/AppLayout';
+import EmployerLayout from './components/EmployerLayout';
 import HelpCenter from './pages/HelpCenter';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorFallback from './components/ErrorFallback';
@@ -19,6 +20,7 @@ import ContributorRewards from './pages/ContributorRewards';
 import EmployeePortal from './pages/EmployeePortal';
 import Login from './pages/Login';
 import AuthCallback from './pages/AuthCallback';
+import AdminPanel from './pages/AdminPanel';
 import { useTranslation } from 'react-i18next';
 import { contractService } from './services/contracts';
 
@@ -199,6 +201,111 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/auth-callback" element={<AuthCallback />} />
+        <Route
+          path="/admin"
+          element={
+            <ErrorBoundary
+              fallback={
+                <ErrorFallback
+                  title="Admin panel error"
+                  description="Something went wrong loading the admin tools."
+                />
+              }
+            >
+              <AdminPanel />
+            </ErrorBoundary>
+          }
+        />
+      </Route>
+
+      <Route path="/employer" element={<EmployerLayout />}>
+        <Route index element={<Navigate to="payroll" replace />} />
+        <Route
+          path="payroll"
+          element={
+            <ErrorBoundary
+              fallback={
+                <ErrorFallback
+                  title={t('errorFallback.payrollTitle')}
+                  description={t('errorFallback.payrollDescription')}
+                />
+              }
+            >
+              <PayrollScheduler />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="employee"
+          element={
+            <ErrorBoundary
+              fallback={
+                <ErrorFallback
+                  title={t('errorFallback.employeesTitle')}
+                  description={t('errorFallback.employeesDescription')}
+                />
+              }
+            >
+              <EmployeeEntry />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="reports"
+          element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <CustomReportBuilder />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="cross-asset-payment"
+          element={
+            <ErrorBoundary fallback={<ErrorFallback onReset={() => {}} />}>
+              <CrossAssetPayment />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="transactions"
+          element={
+            <ErrorBoundary fallback={<ErrorFallback onReset={() => {}} />}>
+              <TransactionHistory />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="revenue-split"
+          element={
+            <ErrorBoundary fallback={<ErrorFallback onReset={() => {}} />}>
+              <RevenueSplitDashboard />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="analytics"
+          element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <PayrollAnalytics />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="bulk-upload"
+          element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <BulkPayrollUpload />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <ErrorBoundary fallback={<ErrorFallback onReset={() => {}} />}>
+              <Settings />
+            </ErrorBoundary>
+          }
+        />
       </Route>
     </Routes>
   );
