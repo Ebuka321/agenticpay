@@ -3,7 +3,6 @@ import express from 'express';
 import { HealthController } from '../healthController.js';
 import pg from 'pg';
 import { Redis } from 'ioredis';
-import { StellarService } from '../../services/stellarService.js';
 
 jest.mock('../../config/env', () => ({
   config: {
@@ -21,36 +20,27 @@ jest.mock('ioredis', () => {
   const mRedis = { ping: jest.fn() };
   return { Redis: jest.fn(() => mRedis) };
 });
-jest.mock('../../services/stellarService', () => ({
-  StellarService: {
-    getServer: jest.fn(),
-  },
-}));
-
 const app = express();
+app.get('/api/health', HealthController.getHealthStatus);
 app.get('/health', HealthController.getHealthStatus);
 
-describe('HealthController GET /health', () => {
+describe('HealthController health endpoints', () => {
   let pool: any;
   let redisClient: any;
-  let mockServer: any;
 
   beforeEach(() => {
     pool = new pg.Pool();
     redisClient = new Redis();
-    mockServer = { feeStats: jest.fn() };
-    (StellarService.getServer as jest.Mock).mockReturnValue(mockServer);
     process.env.BUILD_TIMESTAMP = '2026-03-25T00:00:00.000Z';
 
     jest.clearAllMocks();
   });
 
-  it('returns 200 OK when all dependencies are healthy', async () => {
+  it('returns 200 OK from /api/health when database and redis are healthy', async () => {
     pool.query.mockResolvedValueOnce({ rows: [] });
     redisClient.ping.mockResolvedValueOnce('PONG');
-    mockServer.feeStats.mockResolvedValueOnce({});
 
-    const response = await request(app).get('/health');
+    const response = await request(app).get('/api/health');
 
     expect(response.status).toBe(200);
     expect(response.body.status).toBe('ok');
@@ -61,15 +51,25 @@ describe('HealthController GET /health', () => {
     expect(response.body.uptime).toBeDefined();
     expect(response.body.dependencies.database.status).toBe('connected');
     expect(response.body.dependencies.redis.status).toBe('connected');
-    expect(response.body.dependencies.horizon.status).toBe('connected');
+  });
+
+  it('keeps the legacy /health endpoint working', async () => {
+    pool.query.mockResolvedValueOnce({ rows: [] });
+    redisClient.ping.mockResolvedValueOnce('PONG');
+
+    const response = await request(app).get('/health');
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('ok');
+    expect(response.body.dependencies.database.status).toBe('connected');
+    expect(response.body.dependencies.redis.status).toBe('connected');
   });
 
   it('returns 503 Degraded when Postgres goes down', async () => {
     pool.query.mockRejectedValueOnce(new Error('Connection forced closed'));
     redisClient.ping.mockResolvedValueOnce('PONG');
-    mockServer.feeStats.mockResolvedValueOnce({});
 
-    const response = await request(app).get('/health');
+    const response = await request(app).get('/api/health');
 
     expect(response.status).toBe(503);
     expect(response.body.status).toBe('degraded');
@@ -79,24 +79,11 @@ describe('HealthController GET /health', () => {
   it('returns 503 Degraded when Redis fails', async () => {
     pool.query.mockResolvedValueOnce({ rows: [] });
     redisClient.ping.mockRejectedValueOnce(new Error('Redis timeout'));
-    mockServer.feeStats.mockResolvedValueOnce({});
 
-    const response = await request(app).get('/health');
+    const response = await request(app).get('/api/health');
 
     expect(response.status).toBe(503);
     expect(response.body.status).toBe('degraded');
     expect(response.body.dependencies.redis.status).toBe('disconnected');
-  });
-
-  it('returns 503 Degraded when Horizon fails', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [] });
-    redisClient.ping.mockResolvedValueOnce('PONG');
-    mockServer.feeStats.mockRejectedValueOnce(new Error('Horizon unreachable'));
-
-    const response = await request(app).get('/health');
-
-    expect(response.status).toBe(503);
-    expect(response.body.status).toBe('degraded');
-    expect(response.body.dependencies.horizon.status).toBe('disconnected');
   });
 });

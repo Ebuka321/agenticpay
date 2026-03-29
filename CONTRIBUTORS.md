@@ -2,6 +2,11 @@
 
 We would like to thank all the wonderful people who have contributed to the **PayD** project! This project wouldn't be possible without your effort and dedication.
 
+## 💙 Credits
+
+Thank you to everyone who has contributed code, reviews, documentation, bug reports, testing help, and community support to PayD.
+Every contribution helps make cross-border payroll on Stellar more accessible and reliable.
+
 ## ✨ Our Contributors
 
 | Contributor | GitHub Profile | Role / Contributions |

@@ -5,10 +5,116 @@ import crypto from 'crypto';
 import { Pool } from 'pg';
 import { config } from '../config/env.js';
 import jwt from 'jsonwebtoken';
+import { validatePasswordStrength } from '../utils/passwordStrength.js';
 
 const pool = new Pool({ connectionString: config.DATABASE_URL });
 
 export class AuthController {
+  /**
+   * POST /api/auth/register
+   *
+   * Creates a new organization and its first admin (EMPLOYER) user.
+   * Enforces minimum password complexity before persisting anything.
+   *
+   * Request body:
+   *   { organizationName, email, password }
+   *
+   * Response (201):
+   *   { message, organizationId, accessToken, refreshToken }
+   */
+  static async register(req: express.Request, res: express.Response) {
+    const { organizationName, email, password } = req.body as {
+      organizationName?: string;
+      email?: string;
+      password?: string;
+    };
+
+    if (!organizationName || !email || !password) {
+      return res.status(400).json({
+        error: 'Missing required fields: organizationName, email, password.',
+      });
+    }
+
+    const emailNorm = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) {
+      return res.status(400).json({ error: 'Invalid email address.' });
+    }
+
+    // ── Password strength check ─────────────────────────────────────────────
+    const strength = validatePasswordStrength(password, emailNorm);
+    if (!strength.valid) {
+      return res.status(422).json({
+        error: 'Password does not meet complexity requirements.',
+        details: strength.errors,
+        score: strength.score,
+      });
+    }
+
+    try {
+      const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [emailNorm]);
+      if (existingUser.rows.length > 0) {
+        return res.status(409).json({ error: 'An account with this email already exists.' });
+      }
+
+      // Hash the password before storing (bcrypt-equivalent; using scrypt here to
+      // avoid adding a new dependency when crypto is already imported).
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hashBuf = await new Promise<Buffer>((resolve, reject) =>
+        crypto.scrypt(password, salt, 64, (err, buf) => (err ? reject(err) : resolve(buf)))
+      );
+      const passwordHash = `${salt}:${hashBuf.toString('hex')}`;
+
+      // Create organization and admin user inside a single transaction.
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+
+        const orgResult = await client.query(
+          `INSERT INTO organizations (name) VALUES ($1) RETURNING id`,
+          [organizationName.trim()]
+        );
+        const organizationId: number = orgResult.rows[0].id;
+
+        const userResult = await client.query(
+          `INSERT INTO users (email, password_hash, organization_id, role)
+           VALUES ($1, $2, $3, 'EMPLOYER')
+           RETURNING id`,
+          [emailNorm, passwordHash, organizationId]
+        );
+        const userId: number = userResult.rows[0].id;
+
+        await client.query('COMMIT');
+
+        const accessToken = jwt.sign(
+          { id: userId, email: emailNorm, organizationId, role: 'EMPLOYER' },
+          config.JWT_SECRET,
+          { expiresIn: '1h' }
+        );
+        const refreshToken = jwt.sign({ id: userId }, config.JWT_REFRESH_SECRET, {
+          expiresIn: '7d',
+        });
+
+        await pool.query('UPDATE users SET refresh_token = $1 WHERE id = $2', [
+          refreshToken,
+          userId,
+        ]);
+
+        return res.status(201).json({
+          message: 'Organization and admin account created successfully.',
+          organizationId,
+          accessToken,
+          refreshToken,
+        });
+      } catch (txErr) {
+        await client.query('ROLLBACK');
+        throw txErr;
+      } finally {
+        client.release();
+      }
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
   /**
    * POST /api/auth/2fa/setup
    * Generates a structural totp_secret natively mapping `is_2fa_enabled=false`.

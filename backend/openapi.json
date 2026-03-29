@@ -29,7 +29,9 @@
     "/api/assets/issue": {
       "post": {
         "summary": "Issue organization USD",
-        "tags": ["Assets"],
+        "tags": [
+          "Assets"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -45,7 +47,9 @@
     "/api/assets/clawback": {
       "post": {
         "summary": "Clawback assets",
-        "tags": ["Assets"],
+        "tags": [
+          "Assets"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -61,7 +65,9 @@
     "/api/audit": {
       "get": {
         "summary": "List audit records with pagination",
-        "tags": ["Audit"],
+        "tags": [
+          "Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -93,7 +99,9 @@
     "/api/audit/{txHash}": {
       "get": {
         "summary": "Get a stored audit record by transaction hash",
-        "tags": ["Audit"],
+        "tags": [
+          "Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -117,7 +125,9 @@
       },
       "post": {
         "summary": "Create an audit record for a transaction",
-        "tags": ["Audit"],
+        "tags": [
+          "Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -143,7 +153,9 @@
     "/api/audit/{txHash}/verify": {
       "get": {
         "summary": "Verify integrity of a stored audit record",
-        "tags": ["Audit"],
+        "tags": [
+          "Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -169,7 +181,9 @@
     "/api/balance/{accountId}": {
       "get": {
         "summary": "Query balance for a Stellar account",
-        "tags": ["Balance"],
+        "tags": [
+          "Balance"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -197,7 +211,9 @@
     "/api/balance/preflight": {
       "post": {
         "summary": "Run preflight balance check before payroll execution",
-        "tags": ["Balance"],
+        "tags": [
+          "Balance"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -337,7 +353,9 @@
     "/api/events/{contractId}": {
       "get": {
         "summary": "List indexed contract events",
-        "tags": ["Contract Events"],
+        "tags": [
+          "Contract Events"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -386,7 +404,9 @@
     "/api/contracts": {
       "get": {
         "summary": "Returns all deployed contract addresses with metadata",
-        "tags": ["Contract Registry"],
+        "tags": [
+          "Contract Registry"
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -397,7 +417,9 @@
     "/api/v1/contracts": {
       "get": {
         "summary": "List all registered contracts",
-        "tags": ["Contract Upgrades"],
+        "tags": [
+          "Contract Upgrades"
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -408,7 +430,9 @@
     "/api/v1/contracts/{registryId}": {
       "get": {
         "summary": "Single contract detail",
-        "tags": ["Contract Upgrades"],
+        "tags": [
+          "Contract Upgrades"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -429,7 +453,9 @@
     "/api/v1/contracts/{registryId}/validate-hash": {
       "post": {
         "summary": "Validates WASM hash format and on-chain existence",
-        "tags": ["Contract Upgrades"],
+        "tags": [
+          "Contract Upgrades"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -465,7 +491,9 @@
     "/api/v1/contracts/{registryId}/simulate-upgrade": {
       "post": {
         "summary": "Pre-flights the upgrade via Soroban RPC",
-        "tags": ["Contract Upgrades"],
+        "tags": [
+          "Contract Upgrades"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -504,7 +532,9 @@
     "/api/v1/contracts/{registryId}/upgrade-logs": {
       "get": {
         "summary": "Paginated upgrade history for a specific contract",
-        "tags": ["Contract Upgrades"],
+        "tags": [
+          "Contract Upgrades"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -539,7 +569,9 @@
     "/api/v1/contracts/upgrade-logs/{logId}/execute": {
       "post": {
         "summary": "Executes a simulated upgrade on-chain",
-        "tags": ["Contract Upgrades"],
+        "tags": [
+          "Contract Upgrades"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -575,7 +607,9 @@
     "/api/v1/contracts/upgrade-logs/{logId}/status": {
       "get": {
         "summary": "Polls migration step progress for an executing upgrade",
-        "tags": ["Contract Upgrades"],
+        "tags": [
+          "Contract Upgrades"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -596,7 +630,9 @@
     "/api/v1/contracts/upgrade-logs/{logId}/cancel": {
       "post": {
         "summary": "Cancels a pending or simulated upgrade before execution",
-        "tags": ["Contract Upgrades"],
+        "tags": [
+          "Contract Upgrades"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -617,7 +653,9 @@
     "/api/v1/exports/receipt/{txHash}/pdf": {
       "get": {
         "summary": "Export transaction receipt as PDF",
-        "tags": ["Exports"],
+        "tags": [
+          "Exports"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -638,7 +676,9 @@
     "/api/v1/exports/payroll/{organizationPublicKey}/{batchId}/excel": {
       "get": {
         "summary": "Export payroll report as Excel",
-        "tags": ["Exports"],
+        "tags": [
+          "Exports"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -667,7 +707,9 @@
     "/api/v1/exports/payroll/{organizationPublicKey}/{batchId}/csv": {
       "get": {
         "summary": "Export payroll report as CSV",
-        "tags": ["Exports"],
+        "tags": [
+          "Exports"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -693,10 +735,28 @@
         }
       }
     },
+    "/api/v1/exports/payroll/custom": {
+      "post": {
+        "summary": "Export custom payroll report",
+        "tags": [
+          "Exports"
+        ],
+        "requestBody": {
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "File download"
+          }
+        }
+      }
+    },
     "/api/v1/freeze/account/freeze": {
       "post": {
         "summary": "Freeze an account's trustline",
-        "tags": ["Freeze"],
+        "tags": [
+          "Freeze"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -733,7 +793,9 @@
     "/api/v1/freeze/account/unfreeze": {
       "post": {
         "summary": "Unfreeze an account's trustline",
-        "tags": ["Freeze"],
+        "tags": [
+          "Freeze"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1094,7 +1156,9 @@
     "/api/v1/payroll/audit": {
       "get": {
         "summary": "List payroll audit logs",
-        "tags": ["Payroll Audit"],
+        "tags": [
+          "Payroll Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1120,7 +1184,9 @@
     "/api/v1/payroll/audit/export": {
       "get": {
         "summary": "Export audit logs as CSV",
-        "tags": ["Payroll Audit"],
+        "tags": [
+          "Payroll Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1136,7 +1202,9 @@
     "/api/v1/payroll/audit/summary": {
       "get": {
         "summary": "Get audit summary statistics",
-        "tags": ["Payroll Audit"],
+        "tags": [
+          "Payroll Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1152,7 +1220,9 @@
     "/api/v1/payroll/audit/payroll-run/{payrollRunId}": {
       "get": {
         "summary": "Get audit logs for a specific payroll run",
-        "tags": ["Payroll Audit"],
+        "tags": [
+          "Payroll Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1178,7 +1248,9 @@
     "/api/v1/payroll/audit/employee/{employeeId}": {
       "get": {
         "summary": "Get audit logs for a specific employee",
-        "tags": ["Payroll Audit"],
+        "tags": [
+          "Payroll Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1204,7 +1276,9 @@
     "/api/v1/payroll/audit/{id}": {
       "get": {
         "summary": "Get specific audit log by ID",
-        "tags": ["Payroll Audit"],
+        "tags": [
+          "Payroll Audit"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1230,7 +1304,9 @@
     "/api/v1/payroll-bonus/runs": {
       "post": {
         "summary": "Create a new payroll bonus run",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1244,7 +1320,9 @@
       },
       "get": {
         "summary": "List all payroll bonus runs",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1260,7 +1338,9 @@
     "/api/v1/payroll-bonus/runs/{id}": {
       "get": {
         "summary": "Get details of a payroll bonus run",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1286,7 +1366,9 @@
     "/api/v1/payroll-bonus/runs/{id}/status": {
       "patch": {
         "summary": "Update status of a payroll bonus run",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1312,7 +1394,9 @@
     "/api/v1/payroll-bonus/runs/{id}/execute": {
       "post": {
         "summary": "Execute a payroll bonus run (asynchronous)",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1338,7 +1422,9 @@
     "/api/v1/payroll-bonus/items/bonus": {
       "post": {
         "summary": "Add a single bonus item",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1354,7 +1440,9 @@
     "/api/v1/payroll-bonus/items/bonus/batch": {
       "post": {
         "summary": "Add multiple bonus items in batch",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1370,7 +1458,9 @@
     "/api/v1/payroll-bonus/runs/{payrollRunId}/items": {
       "get": {
         "summary": "List all items in a payroll bonus run",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1396,7 +1486,9 @@
     "/api/v1/payroll-bonus/items/{itemId}": {
       "delete": {
         "summary": "Delete a payroll item",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1422,7 +1514,9 @@
     "/api/v1/payroll-bonus/bonuses/history": {
       "get": {
         "summary": "Get history of all bonuses",
-        "tags": ["Payroll Bonus"],
+        "tags": [
+          "Payroll Bonus"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1438,7 +1532,9 @@
     "/api/v1/rate-limit/status": {
       "get": {
         "summary": "Get current rate limit status",
-        "tags": ["Rate Limiting"],
+        "tags": [
+          "Rate Limiting"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1454,7 +1550,9 @@
     "/api/v1/rate-limit/tiers": {
       "get": {
         "summary": "List available rate limit tiers",
-        "tags": ["Rate Limiting"],
+        "tags": [
+          "Rate Limiting"
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -1465,7 +1563,9 @@
     "/api/v1/search/organizations/{organizationId}/employees": {
       "get": {
         "summary": "Search and filter employees",
-        "tags": ["Data Search"],
+        "tags": [
+          "Data Search"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1491,7 +1591,9 @@
     "/api/v1/search/organizations/{organizationId}/transactions": {
       "get": {
         "summary": "Search and filter transactions",
-        "tags": ["Data Search"],
+        "tags": [
+          "Data Search"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1517,7 +1619,9 @@
     "/api/stellar-throttling/status": {
       "get": {
         "summary": "Get current throttling status",
-        "tags": ["Stellar Throttling"],
+        "tags": [
+          "Stellar Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Current throttling status"
@@ -1528,7 +1632,9 @@
     "/api/stellar-throttling/metrics": {
       "get": {
         "summary": "Get throttling metrics",
-        "tags": ["Stellar Throttling"],
+        "tags": [
+          "Stellar Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Throttling metrics"
@@ -1539,7 +1645,9 @@
     "/api/stellar-throttling/config": {
       "get": {
         "summary": "Get current throttling configuration",
-        "tags": ["Stellar Throttling"],
+        "tags": [
+          "Stellar Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Current configuration"
@@ -1548,7 +1656,9 @@
       },
       "put": {
         "summary": "Update throttling configuration",
-        "tags": ["Stellar Throttling"],
+        "tags": [
+          "Stellar Throttling"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1583,7 +1693,9 @@
     "/api/stellar-throttling/queue/clear": {
       "post": {
         "summary": "Clear the transaction queue",
-        "tags": ["Stellar Throttling"],
+        "tags": [
+          "Stellar Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Queue cleared successfully"
@@ -1594,7 +1706,9 @@
     "/api/stellar-throttling/metrics/reset": {
       "post": {
         "summary": "Reset throttling metrics",
-        "tags": ["Stellar Throttling"],
+        "tags": [
+          "Stellar Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Metrics reset successfully"
@@ -1605,7 +1719,9 @@
     "/api/stellar-throttling/health": {
       "get": {
         "summary": "Health check for throttling service",
-        "tags": ["Stellar Throttling"],
+        "tags": [
+          "Stellar Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Service is healthy"
@@ -1619,7 +1735,9 @@
     "/api/v1/taxes/rules": {
       "post": {
         "summary": "Create a new tax rule",
-        "tags": ["Taxation"],
+        "tags": [
+          "Taxation"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1633,7 +1751,9 @@
       },
       "get": {
         "summary": "List all tax rules",
-        "tags": ["Taxation"],
+        "tags": [
+          "Taxation"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1649,7 +1769,9 @@
     "/api/v1/taxes/rules/{id}": {
       "put": {
         "summary": "Update a tax rule",
-        "tags": ["Taxation"],
+        "tags": [
+          "Taxation"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -1668,7 +1790,9 @@
       },
       "delete": {
         "summary": "Delete a tax rule",
-        "tags": ["Taxation"],
+        "tags": [
+          "Taxation"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -1689,7 +1813,9 @@
     "/api/v1/taxes/calculate": {
       "post": {
         "summary": "Calculate deductions for a payment",
-        "tags": ["Taxation"],
+        "tags": [
+          "Taxation"
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -1700,7 +1826,9 @@
     "/api/v1/taxes/reports": {
       "get": {
         "summary": "Get tax compliance reports",
-        "tags": ["Taxation"],
+        "tags": [
+          "Taxation"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1716,7 +1844,9 @@
     "/api/v1/throttling/status": {
       "get": {
         "summary": "Get current throttling status",
-        "tags": ["Throttling"],
+        "tags": [
+          "Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -1727,7 +1857,9 @@
     "/api/v1/throttling/config": {
       "get": {
         "summary": "Get throttling configuration",
-        "tags": ["Throttling"],
+        "tags": [
+          "Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -1736,7 +1868,9 @@
       },
       "put": {
         "summary": "Update throttling configuration",
-        "tags": ["Throttling"],
+        "tags": [
+          "Throttling"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1752,7 +1886,9 @@
     "/api/v1/throttling/queue": {
       "delete": {
         "summary": "Clear the throttling queue",
-        "tags": ["Throttling"],
+        "tags": [
+          "Throttling"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1768,7 +1904,9 @@
     "/api/v1/throttling/metrics": {
       "get": {
         "summary": "Get throttling performance metrics",
-        "tags": ["Throttling"],
+        "tags": [
+          "Throttling"
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -1779,7 +1917,9 @@
     "/api/v1/trustline/check/{walletAddress}": {
       "get": {
         "summary": "Detect trustline status via Horizon",
-        "tags": ["Trustlines"],
+        "tags": [
+          "Trustlines"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -1807,7 +1947,9 @@
     "/api/v1/trustline/employees/{employeeId}": {
       "get": {
         "summary": "Get stored trustline status for an employee",
-        "tags": ["Trustlines"],
+        "tags": [
+          "Trustlines"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -1828,7 +1970,9 @@
     "/api/v1/trustline/employees/{employeeId}/refresh": {
       "post": {
         "summary": "Update trustline status in DB from Horizon",
-        "tags": ["Trustlines"],
+        "tags": [
+          "Trustlines"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -1864,7 +2008,9 @@
     "/api/v1/trustline/prompt": {
       "post": {
         "summary": "Build unsigned changeTrust XDR",
-        "tags": ["Trustlines"],
+        "tags": [
+          "Trustlines"
+        ],
         "requestBody": {
           "required": true,
           "content": {

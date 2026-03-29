@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import pg from 'pg';
 import { Redis } from 'ioredis';
 import { config } from '../config/env.js';
-import { StellarService } from '../services/stellarService.js';
 
 const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
 
@@ -36,7 +35,6 @@ export class HealthController {
       dependencies: {
         database: { status: 'unknown' },
         redis: { status: 'unknown' },
-        horizon: { status: 'unknown' },
       },
     };
 
@@ -64,17 +62,6 @@ export class HealthController {
       }
     } else {
       statusReport.dependencies.redis.status = 'not_configured';
-    }
-
-    // 3. Stellar Horizon Check
-    try {
-      const server = StellarService.getServer();
-      await server.feeStats();
-      statusReport.dependencies.horizon.status = 'connected';
-    } catch (error: any) {
-      isHealthy = false;
-      statusReport.dependencies.horizon.status = 'disconnected';
-      statusReport.dependencies.horizon.error = error.message;
     }
 
     if (!isHealthy) {

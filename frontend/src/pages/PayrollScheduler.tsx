@@ -18,6 +18,7 @@ import { useTransactionSimulation } from '../hooks/useTransactionSimulation';
 import { createClaimableBalanceTransaction, generateWallet } from '../services/stellar';
 
 import { ContractErrorPanel } from '../components/ContractErrorPanel';
+import { IssuerMultisigBanner } from '../components/IssuerMultisigBanner';
 import { HelpLink } from '../components/HelpLink';
 import { parseContractError, type ContractErrorDetail } from '../utils/contractErrorParser';
 
@@ -428,6 +429,8 @@ export default function PayrollScheduler() {
           </button>
         </div>
       </div>
+
+      <IssuerMultisigBanner />
 
       {activeSchedule && (
         <div className="w-full mb-12 bg-black/20 border border-success/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">

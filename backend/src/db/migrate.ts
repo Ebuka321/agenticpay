@@ -54,6 +54,7 @@ if (!DATABASE_URL) {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const MIGRATIONS_DIR = path.resolve(__dirname, 'migrations');
+const ROLLBACKS_DIR = path.resolve(__dirname, 'rollbacks');
 
 /**
  * The tracking table is always the first thing the runner creates.
@@ -271,10 +272,98 @@ async function runMigrations(isDryRun: boolean): Promise<RunResult> {
   return result;
 }
 
+// ─── Rollback runner ─────────────────────────────────────────────────────────
+
+/**
+ * Roll back the N most-recently applied migrations (default: 1).
+ *
+ * For each migration to be rolled back (in reverse-applied-at order) the
+ * runner looks for a matching file in the `rollbacks/` directory next to
+ * `migrations/`.  The rollback SQL is executed inside a SERIALIZABLE
+ * transaction and the corresponding `schema_migrations` row is deleted on
+ * success so the migration can be re-applied later.
+ *
+ * Usage:
+ *   ts-node src/db/migrate.ts --rollback         # roll back 1 migration
+ *   ts-node src/db/migrate.ts --rollback 3       # roll back 3 migrations
+ *   ts-node src/db/migrate.ts --rollback --dry-run
+ */
+async function runRollback(steps: number, isDryRun: boolean): Promise<void> {
+  if (!fs.existsSync(ROLLBACKS_DIR)) {
+    throw new Error(
+      `Rollbacks directory not found: ${ROLLBACKS_DIR}. ` +
+        'Create rollback SQL files in src/db/rollbacks/ with names matching the migration files.'
+    );
+  }
+
+  const pool = new Pool({
+    connectionString: DATABASE_URL,
+    max: 1,
+    idleTimeoutMillis: 5_000,
+    connectionTimeoutMillis: 10_000,
+  });
+
+  const client = await pool.connect();
+
+  try {
+    // Fetch applied migrations in reverse order (most recently applied first).
+    const { rows } = await client.query<{ filename: string }>(
+      'SELECT filename FROM schema_migrations ORDER BY id DESC LIMIT $1',
+      [steps]
+    );
+
+    if (rows.length === 0) {
+      console.log('[migrate] No applied migrations found to roll back.');
+      return;
+    }
+
+    console.log(`[migrate] Rolling back ${rows.length} migration(s):`);
+
+    for (const { filename } of rows) {
+      const rollbackFile = path.join(ROLLBACKS_DIR, filename);
+
+      if (!fs.existsSync(rollbackFile)) {
+        throw new Error(
+          `Missing rollback file for "${filename}". ` +
+            `Expected: ${rollbackFile}. ` +
+            'Every migration must have a corresponding rollback SQL file.'
+        );
+      }
+
+      const sql = fs.readFileSync(rollbackFile, 'utf8');
+
+      if (isDryRun) {
+        console.log(`[migrate] [dry-run] Would roll back: ${filename}`);
+        continue;
+      }
+
+      const startMs = Date.now();
+      await client.query('BEGIN');
+
+      try {
+        await client.query(sql);
+        await client.query('DELETE FROM schema_migrations WHERE filename = $1', [filename]);
+        await client.query('COMMIT');
+        const executionMs = Date.now() - startMs;
+        console.log(`[migrate] ↩ Rolled back  ${filename}  (${executionMs} ms)`);
+      } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(`[migrate] ✗ Rollback failed for  ${filename}`);
+        throw err;
+      }
+    }
+  } finally {
+    client.release();
+    await pool.end();
+  }
+}
+
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
   const isDryRun = process.argv.includes('--dry-run');
+  const rollbackIdx = process.argv.indexOf('--rollback');
+  const isRollback = rollbackIdx !== -1;
 
   console.log(`[migrate] Starting migration runner${isDryRun ? ' (DRY RUN)' : ''}`);
   console.log(`[migrate] Target database: ${maskConnectionString(DATABASE_URL!)}`);
@@ -282,18 +371,28 @@ async function main(): Promise<void> {
   const startMs = Date.now();
 
   try {
-    const result = await runMigrations(isDryRun);
+    if (isRollback) {
+      // The optional value after --rollback specifies how many steps to roll back.
+      const nextArg = process.argv[rollbackIdx + 1];
+      const steps = nextArg && /^\d+$/.test(nextArg) ? parseInt(nextArg, 10) : 1;
+      console.log(`[migrate] Mode: ROLLBACK (${steps} step${steps === 1 ? '' : 's'})`);
+      await runRollback(steps, isDryRun);
+    } else {
+      const result = await runMigrations(isDryRun);
+
+      const totalMs = Date.now() - startMs;
+
+      console.log('');
+      console.log('─────────────────────────────────────────');
+      console.log(`[migrate] Summary  (${totalMs} ms total)`);
+      console.log(`  Applied : ${result.applied.length}`);
+      console.log(`  Skipped : ${result.skipped.length}`);
+      console.log(`  Drift   : ${result.driftDetected.length}`);
+      console.log('─────────────────────────────────────────');
+    }
 
     const totalMs = Date.now() - startMs;
-
-    console.log('');
-    console.log('─────────────────────────────────────────');
-    console.log(`[migrate] Summary  (${totalMs} ms total)`);
-    console.log(`  Applied : ${result.applied.length}`);
-    console.log(`  Skipped : ${result.skipped.length}`);
-    console.log(`  Drift   : ${result.driftDetected.length}`);
-    console.log('─────────────────────────────────────────');
-    console.log('[migrate] Done.');
+    console.log(`[migrate] Done.  (${totalMs} ms)`);
     process.exit(0);
   } catch (err) {
     console.error('[migrate] Migration failed:', err instanceof Error ? err.message : err);

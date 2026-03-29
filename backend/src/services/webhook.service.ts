@@ -41,7 +41,18 @@ export const WEBHOOK_EVENTS = {
 
 export type WebhookEventType = (typeof WEBHOOK_EVENTS)[keyof typeof WEBHOOK_EVENTS];
 
+interface DeliveryAttemptResult {
+  attemptNumber: number;
+  responseStatus: number | null;
+  responseBody: any | null;
+  errorMessage: string | null;
+}
+
 export class WebhookService {
+  private static readonly MAX_DELIVERY_ATTEMPTS = 4;
+  private static readonly INITIAL_RETRY_DELAY_MS = 1000;
+  private static readonly REQUEST_TIMEOUT_MS = 5000;
+
   static async subscribe(
     organization_id: number,
     url: string,
@@ -138,18 +149,30 @@ export class WebhookService {
       const signature = this.generateSignature(payloadString, sub.secret, timestamp);
 
       try {
-        const response = await this.sendWithRetry(sub.url, payload, {
-          'X-PayD-Event': eventType,
-          'X-PayD-Signature': signature,
-          'X-PayD-Timestamp': timestamp,
-          'Content-Type': 'application/json',
-        });
-        await this.logDelivery(sub.id, eventType, payload, response.status, response.data, null, 1);
-        console.log(`Webhook dispatched successfully to ${sub.url}`);
+        const { attempts } = await this.sendWithRetry(
+          sub.url,
+          payload,
+          {
+            'X-PayD-Event': eventType,
+            'X-PayD-Signature': signature,
+            'X-PayD-Timestamp': timestamp,
+            'Content-Type': 'application/json',
+          },
+          async (attempt) => {
+            await this.logDelivery(
+              sub.id,
+              eventType,
+              payload,
+              attempt.responseStatus,
+              attempt.responseBody,
+              attempt.errorMessage,
+              attempt.attemptNumber
+            );
+          }
+        );
+        console.log(`Webhook dispatched successfully to ${sub.url} after ${attempts} attempt(s)`);
       } catch (error: any) {
-        const errorMessage = error.response?.data?.message || error.message;
-        const status = error.response?.status;
-        await this.logDelivery(sub.id, eventType, payload, status || null, null, errorMessage, 1);
+        const errorMessage = this.getErrorMessage(error);
         console.error(`Failed to dispatch webhook to ${sub.url}:`, errorMessage);
       }
     });
@@ -190,20 +213,54 @@ export class WebhookService {
     url: string,
     data: any,
     headers: any,
-    retries = 3,
-    delay = 1000
-  ): Promise<{ status: number; data: any }> {
-    try {
-      const response = await axios.post(url, data, { headers, timeout: 5000 });
-      return { status: response.status, data: response.data };
-    } catch (error: any) {
-      if (retries > 0) {
-        console.log(`Retrying webhook to ${url} (${retries} attempts left)...`);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        return this.sendWithRetry(url, data, headers, retries - 1, delay * 2);
+    onAttempt?: (attempt: DeliveryAttemptResult) => Promise<void>
+  ): Promise<{ status: number; data: any; attempts: number }> {
+    let delay = this.INITIAL_RETRY_DELAY_MS;
+
+    for (let attemptNumber = 1; attemptNumber <= this.MAX_DELIVERY_ATTEMPTS; attemptNumber += 1) {
+      try {
+        const response = await axios.post(url, data, {
+          headers,
+          timeout: this.REQUEST_TIMEOUT_MS,
+        });
+
+        await onAttempt?.({
+          attemptNumber,
+          responseStatus: response.status,
+          responseBody: response.data,
+          errorMessage: null,
+        });
+
+        return { status: response.status, data: response.data, attempts: attemptNumber };
+      } catch (error: any) {
+        await onAttempt?.({
+          attemptNumber,
+          responseStatus: error.response?.status ?? null,
+          responseBody: error.response?.data ?? null,
+          errorMessage: this.getErrorMessage(error),
+        });
+
+        if (attemptNumber === this.MAX_DELIVERY_ATTEMPTS) {
+          throw error;
+        }
+
+        console.log(
+          `Retrying webhook to ${url} with exponential backoff (${attemptNumber + 1}/${this.MAX_DELIVERY_ATTEMPTS}) in ${delay}ms...`
+        );
+        await this.sleep(delay);
+        delay *= 2;
       }
-      throw error;
     }
+
+    throw new Error(`Unable to deliver webhook to ${url}`);
+  }
+
+  private static getErrorMessage(error: any): string {
+    return error.response?.data?.message || error.message || 'Unknown webhook delivery error';
+  }
+
+  private static sleep(delay: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, delay));
   }
 
   static async getDeliveryLogs(subscriptionId: string, limit = 20): Promise<WebhookDeliveryLog[]> {

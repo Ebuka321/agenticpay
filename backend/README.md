@@ -154,6 +154,7 @@ http://localhost:3001/api/payroll
 
 | Endpoint             | Method | Purpose          |
 | -------------------- | ------ | ---------------- |
+| `/api/health`        | GET    | API health check |
 | `/status/health`     | GET    | SDS health check |
 | `/status/rate-limit` | GET    | Rate limit info  |
 | `/cache/stats`       | GET    | Cache statistics |
@@ -429,6 +430,9 @@ docker-compose logs [service-name]
 ### SDS Connection Issues
 
 ```bash
+# Check API health (PostgreSQL + Redis)
+curl http://localhost:3001/api/health
+
 # Check health
 curl http://localhost:3001/api/payroll/status/health
 

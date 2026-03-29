@@ -5,7 +5,8 @@
  * signatures, and exposes the threshold & signer configuration so the UI can
  * guide partial signing flows.
  *
- * Issue: https://github.com/Gildado/PayD/issues/171
+ * Issues: https://github.com/Gildado/PayD/issues/171
+ *         https://github.com/Gildado/PayD/issues/389 (issuer-aware Horizon URL)
  */
 
 // ---------------------------------------------------------------------------
@@ -78,6 +79,18 @@ function getHorizonUrl(): string {
   return envUrl?.replace(/\/+$/, '') || 'https://horizon-testnet.stellar.org';
 }
 
+/**
+ * Resolves the Horizon base URL for the wallet network when no env override is set.
+ * Keeps issuer multisig checks aligned with testnet vs public/mainnet.
+ */
+export function getHorizonUrlForNetwork(network: 'TESTNET' | 'PUBLIC'): string {
+  const envUrl = import.meta.env.PUBLIC_STELLAR_HORIZON_URL as string | undefined;
+  if (envUrl) return envUrl.replace(/\/+$/, '');
+  return network === 'PUBLIC'
+    ? 'https://horizon.stellar.org'
+    : 'https://horizon-testnet.stellar.org';
+}
+
 // ---------------------------------------------------------------------------
 // Core detection
 // ---------------------------------------------------------------------------
@@ -86,9 +99,13 @@ function getHorizonUrl(): string {
  * Fetches account details from Horizon and derives multisig configuration.
  *
  * @param accountId - Stellar public key (G…) to inspect.
+ * @param options - Optional `horizonUrl` override (e.g. match connected wallet network).
  * @returns A result object with multisig information or an error.
  */
-export async function detectMultisig(accountId: string): Promise<MultisigDetectionResult> {
+export async function detectMultisig(
+  accountId: string,
+  options?: { horizonUrl?: string }
+): Promise<MultisigDetectionResult> {
   if (!accountId || !accountId.startsWith('G') || accountId.length !== 56) {
     return {
       success: false,
@@ -97,7 +114,7 @@ export async function detectMultisig(accountId: string): Promise<MultisigDetecti
     };
   }
 
-  const horizonUrl = getHorizonUrl();
+  const horizonUrl = options?.horizonUrl ?? getHorizonUrl();
 
   try {
     const response = await fetch(`${horizonUrl}/accounts/${encodeURIComponent(accountId)}`, {
