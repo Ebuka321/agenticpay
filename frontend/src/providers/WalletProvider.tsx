@@ -38,7 +38,7 @@ function withWalletConnectionTimeout<T>(promise: Promise<T>, timeoutMs: number):
       },
       (error: unknown) => {
         window.clearTimeout(timeoutId);
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     );
   });
