@@ -150,24 +150,24 @@ Every payment includes:
 
 ## 🚀 Quick Start
 
-Start PayD locally in three steps:
+Get PayD running locally in three steps:
 
-1. **Clone and enter the repo**
-   ```bash
-   git clone https://github.com/Gildado/PayD.git
-   cd PayD
-   ```
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-3. **Create your local environment and start the app**
-   ```bash
-   cp .env.example .env
-   npm run dev
-   ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/Gildado/PayD.git
+cd PayD
 
-Need the full setup? Keep reading for prerequisites, environment variables, and database setup.
+# 2. Install dependencies
+npm install
+
+# 3. Configure environment and start the dev server
+cp .env.example .env
+npm run dev
+```
+
+> **That's it!** The app will be available at `http://localhost:5173`.
+
+Need the full setup (prerequisites, environment variables, database, smart contracts)? Keep reading below.
 
 For cloud hosting instructions, see the deployment guide:
 
