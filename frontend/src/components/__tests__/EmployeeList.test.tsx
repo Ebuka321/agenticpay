@@ -40,4 +40,24 @@ describe('EmployeeList', () => {
     expect(email).toHaveAttribute('title', employee.email);
     expect(email.className).toContain('truncate');
   });
+
+  test('renders skeleton rows and hides employee data while loading', () => {
+    render(<EmployeeList employees={[employee]} isLoading onAddEmployee={vi.fn()} />);
+
+    // Employee data must not be visible during loading
+    expect(screen.queryByLabelText(`Employee name: ${employee.name}`)).toBeNull();
+    expect(screen.queryByLabelText(`Employee email: ${employee.email}`)).toBeNull();
+
+    // Skeleton rows are rendered with pulse animation
+    const rows = document.querySelectorAll('tbody tr');
+    expect(rows.length).toBe(5);
+    rows.forEach((row) => {
+      expect(row.className).toContain('animate-pulse');
+    });
+  });
+
+  test('renders empty state message when not loading and no employees exist', () => {
+    render(<EmployeeList employees={[]} isLoading={false} onAddEmployee={vi.fn()} />);
+    expect(screen.getByText('No employees found')).toBeTruthy();
+  });
 });

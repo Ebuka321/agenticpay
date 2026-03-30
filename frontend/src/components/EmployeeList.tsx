@@ -20,6 +20,7 @@ interface Employee {
 
 interface EmployeeListProps {
   employees: Employee[];
+  isLoading?: boolean;
   onEmployeeClick?: (employee: Employee) => void;
   onAddEmployee: (employee: Employee) => void;
   onEditEmployee?: (employee: Employee) => void;
@@ -27,8 +28,49 @@ interface EmployeeListProps {
   onUpdateEmployeeImage?: (id: string, imageUrl: string) => void;
 }
 
+const SKELETON_ROW_COUNT = 5;
+
+const EmployeeSkeletonRow: React.FC = () => (
+  <tr className="animate-pulse border-b border-gray-200/20">
+    {/* Name column */}
+    <td className="p-6">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-gray-300/30 shrink-0" />
+        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+          <div className="h-2.5 rounded bg-gray-300/30 w-3/4" />
+          <div className="h-2 rounded bg-gray-300/20 w-1/2" />
+        </div>
+      </div>
+    </td>
+    {/* Role */}
+    <td className="p-6">
+      <div className="h-2.5 rounded bg-gray-300/30 w-2/3" />
+    </td>
+    {/* Wallet */}
+    <td className="p-6">
+      <div className="h-2.5 rounded bg-gray-300/20 w-3/4 font-mono" />
+    </td>
+    {/* Salary */}
+    <td className="p-6">
+      <div className="h-2.5 rounded bg-gray-300/30 w-1/2" />
+    </td>
+    {/* Status */}
+    <td className="p-6">
+      <div className="h-5 rounded-full bg-gray-300/20 w-16" />
+    </td>
+    {/* Actions */}
+    <td className="p-6">
+      <div className="flex gap-2">
+        <div className="w-5 h-5 rounded bg-gray-300/20" />
+        <div className="w-5 h-5 rounded bg-gray-300/20" />
+      </div>
+    </td>
+  </tr>
+);
+
 export const EmployeeList: React.FC<EmployeeListProps> = ({
   employees,
+  isLoading = false,
   onAddEmployee,
   onEditEmployee,
   onRemoveEmployee,
@@ -212,7 +254,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {sortedEmployees.length === 0 ? (
+          {isLoading ? (
+            Array.from({ length: SKELETON_ROW_COUNT }, (_, i) => (
+              <EmployeeSkeletonRow key={i} />
+            ))
+          ) : sortedEmployees.length === 0 ? (
             <tr>
               <td colSpan={6} className="p-6 text-center text-gray-500">
                 {debouncedSearch ? `No employees match "${debouncedSearch}"` : 'No employees found'}
