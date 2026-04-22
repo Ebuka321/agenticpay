@@ -1,6 +1,7 @@
 const serviceWorkerSource = `
 const SHELL_CACHE = 'agenticpay-shell-v2';
 const RUNTIME_CACHE = 'agenticpay-runtime-v2';
+const OFFLINE_INDICATOR_CACHE = 'agenticpay-offline-v1';
 const APP_SHELL_URLS = [
   '/',
   '/auth',
@@ -8,11 +9,19 @@ const APP_SHELL_URLS = [
   '/manifest.webmanifest',
   '/icons/image-192.png',
   '/icons/image-512.png',
+  '/offline',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL_URLS))
+    Promise.all([
+      caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL_URLS)),
+      caches.open(OFFLINE_INDICATOR_CACHE).then((cache) => 
+        cache.put('/offline', new Response('<html><body><h1>Offline</h1><p>You are currently offline. Your actions will be synced when the connection is restored.</p></body></html>', { 
+          headers: { 'Content-Type': 'text/html' } 
+        }))
+      ),
+    ])
   );
   self.skipWaiting();
 });
@@ -22,13 +31,30 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== SHELL_CACHE && key !== RUNTIME_CACHE)
+          .filter((key) => key !== SHELL_CACHE && key !== RUNTIME_CACHE && key !== OFFLINE_INDICATOR_CACHE)
           .map((key) => caches.delete(key))
       )
     )
   );
   self.clients.claim();
 });
+
+function setupOfflineIndicator() {
+  if ('ononline' in window) return;
+  
+  const originalOnOnline = window.ononline;
+  const originalOnOffline = window.onoffline;
+  
+  window.addEventListener('online', () => {
+    const event = new CustomEvent('agenticpay:online');
+    window.dispatchEvent(event);
+  });
+  
+  window.addEventListener('offline', () => {
+    const event = new CustomEvent('agenticpay:offline');
+    window.dispatchEvent(event);
+  });
+}
 
 async function cacheFirst(request) {
   const cached = await caches.match(request);
