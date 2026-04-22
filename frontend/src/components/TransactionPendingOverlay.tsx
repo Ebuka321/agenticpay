@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import { Text } from '@stellar/design-system';
+import { getTxExplorerUrl } from '../utils/stellarExpert';
 
 export interface PendingTransaction {
   id: string;
@@ -97,7 +98,7 @@ export const TransactionPendingOverlay: React.FC<TransactionPendingOverlayProps>
 
                 {tx.hash && (
                   <a
-                    href={`https://stellar.expert/explorer/testnet/tx/${tx.hash}`}
+                    href={getTxExplorerUrl(tx.hash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--accent)] hover:text-[var(--accent2)] transition-colors"

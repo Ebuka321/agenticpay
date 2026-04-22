@@ -428,6 +428,35 @@ function FragmentRow({
               <p className="text-sm text-muted">Loading recipient statuses...</p>
             ) : (
               <div className="space-y-3">
+                {run.status === 'Pending' || run.status === 'Processing' ? (
+                  <div className="mb-4 p-4 bg-surface/50 rounded-lg border border-hi/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-text">Processing on-chain...</span>
+                      <span className="text-sm font-bold text-accent">
+                        {Math.round(
+                          ((onChainState?.successCount ?? 0) / summary.items.length) * 100
+                        )}
+                        %
+                      </span>
+                    </div>
+                    <div className="w-full h-3 bg-surface-hi rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-accent to-success transition-all duration-500 ease-out animate-pulse"
+                        style={{
+                          width: `${Math.round(
+                            ((onChainState?.successCount ?? 0) / summary.items.length) * 100
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs text-muted">
+                      <span>
+                        {onChainState?.successCount ?? 0} of {summary.items.length} confirmed
+                      </span>
+                      <span>Processing in progress</span>
+                    </div>
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap items-center gap-4 rounded-md border border-hi/30 px-3 py-2 text-xs text-muted">
                   <span>Recipients: {summary.items.length}</span>
                   <span>Confirmed on-chain: {onChainState?.successCount ?? 0}</span>
