@@ -24,6 +24,9 @@ import { slaTrackingMiddleware } from './middleware/slaTracking.js';
 import { requestIdMiddleware, REQUEST_ID_HEADER } from './middleware/requestId.js';
 import { validateEnv, config as getConfig } from './config/env.js';
 import { flagsRouter } from './routes/flags.js';
+import { emailRouter } from './routes/email.js';
+import { portfolioRouter } from './routes/portfolio.js';
+import { backupRouter } from './routes/backup.js';
 
 // Validate environment variables at startup
 validateEnv();
@@ -218,8 +221,12 @@ apiV1Router.use('/sla', slaRouter);
 apiV1Router.use('/legacy', legacyRouter);
 apiV1Router.use('/splits', splitsRouter);
 apiV1Router.use('/refunds', refundsRouter);
-// Feature flag admin — inspect & override flags at runtime
-apiV1Router.use('/flags', flagsRouter);
+// Email delivery system
+apiV1Router.use('/emails', emailRouter);
+// Portfolio/wallet aggregation
+apiV1Router.use('/portfolio', portfolioRouter);
+// Backup system
+apiV1Router.use('/backup', backupRouter);
 
 app.use('/api/v1', apiV1Router);
 
